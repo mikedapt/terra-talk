@@ -5,19 +5,19 @@ export default function CategoryView({ category, onNavigate }) {
   const pinnedThreads = category.threads.filter((t) => t.pinned)
   const normalThreads = category.threads.filter((t) => !t.pinned)
 
-  const [topics, setTopics] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  //const [topics, setTopics] = useState([]);
+  //const [loading, setLoading] = useState(true);
+  //const [error, setError] = useState(null);
 
-  useEffect(() => {
-    api('/topics')
-      .then(setTopics)
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);  // empty array = run once when component mounts
+  //useEffect(() => {
+    //api('/topics')
+      //.then(setTopics)
+      //.catch(err => setError(err.message))
+      //.finally(() => setLoading(false));
+  //}, []);  // empty array = run once when component mounts
 
-  if (loading) return <p>Loading topics...</p>;
-  if (error) return <p>Error: {error}</p>;
+  //if (loading) return <p>Loading topics...</p>;
+  //if (error) return <p>Error: {error}</p>;
 
   return (
     <div className="page-content">

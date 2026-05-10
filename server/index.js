@@ -48,7 +48,25 @@ app.post('/api/login', async (req, res) => {
 });
 
 // --- Servers ---
-app.get('/api/topics', (req, res) => {
+app.get('/api/categories', (req, res) => {
+  const rows = db.prepare(`
+    SELECT s.*, u.username AS creator
+    FROM categories s JOIN users u ON u.id = s.created_by
+    ORDER BY s.created_at DESC
+  `).all();
+  res.json(rows);
+});
+
+app.post('/api/categories', authRequired, (req, res) => {
+  const { name, description} = req.body;
+  const info = db.prepare(
+    'INSERT INTO categories (name, description, created_by) VALUES (?, ?, ?)'
+  ).run(name, address, description, section, req.user.id);
+  res.json({ id: info.lastInsertRowid });
+});
+
+// --- Topics ---
+app.get('/api/categories/:id/topics', (req, res) => {
   const rows = db.prepare(`
     SELECT s.*, u.username AS creator
     FROM topics s JOIN users u ON u.id = s.created_by
@@ -57,11 +75,11 @@ app.get('/api/topics', (req, res) => {
   res.json(rows);
 });
 
-app.post('/api/topics', authRequired, (req, res) => {
-  const { name, address, description } = req.body;
+app.post('/api/categories/:id/topics', authRequired, (req, res) => {
+  const { name, title, description} = req.body;
   const info = db.prepare(
-    'INSERT INTO topics (name, title, description, created_by) VALUES (?, ?, ?, ?)'
-  ).run(name, address, description, req.user.id);
+    'INSERT INTO topics (name, category_id, title, description, created_by) VALUES (?, ?, ?, ?, ?)'
+  ).run(name, address, description, section, req.user.id);
   res.json({ id: info.lastInsertRowid });
 });
 

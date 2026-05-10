@@ -1,7 +1,24 @@
 import { forumSections, forumStats } from '../data/mockData'
 import CategoryRow from './CategoryRow'
+import { useState, useEffect } from 'react'
+import { api } from '../api';
 
 export default function ForumHome({ onNavigate }) {
+
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    api('/categories')
+      .then(setCategories)
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);  // empty array = run once when component mounts
+
+  if (loading) return <p>Loading categories...</p>;
+  if (error) return <p>Error: {error}</p>;
+
   return (
     <div className="page-content">
       <div className="forum-layout">

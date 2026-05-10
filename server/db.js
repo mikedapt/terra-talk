@@ -17,13 +17,26 @@ db.exec(`
     created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
-  CREATE TABLE IF NOT EXISTS topics (
+  CREATE TABLE IF NOT EXISTS categories (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     name        TEXT NOT NULL,
-    title       TEXT NOT NULL,
     description TEXT,
     created_by  INTEGER NOT NULL,
     created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS topics (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    category_id INTEGER NOT NULL,
+    name        TEXT NOT NULL,
+    icon        TEXT,
+    title       TEXT NOT NULL,
+    description TEXT,
+    accentColor TEXT,
+    created_by  INTEGER NOT NULL,
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
     FOREIGN KEY (created_by) REFERENCES users(id)
   );
 
