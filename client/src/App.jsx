@@ -1,6 +1,8 @@
 import { useState} from 'react'
 import Header from './components/Header'
 import ForumHome from './components/ForumHome'
+import ForumLogin from './components/ForumLogin'
+import ForumRegister from './components/ForumRegister'
 import CategoryView from './components/CategoryView'
 import ThreadView from './components/ThreadView'
 import Footer from './components/Footer'
@@ -20,6 +22,8 @@ export default function App() {
       <Header darkMode={darkMode} toggleDark={() => setDarkMode((d) => !d)} onNavigate={navigate} />
 
       {view.page === 'home' && <ForumHome onNavigate={navigate} />}
+      {view.page === 'login' && <ForumLogin onNavigate={navigate} />}
+      {view.page === 'register' && <ForumRegister onNavigate={navigate} />}
       {view.page === 'category' && <CategoryView category={view.category} onNavigate={navigate} />}
       {view.page === 'thread' && <ThreadView thread={view.thread} category={view.category} onNavigate={navigate} />}
 

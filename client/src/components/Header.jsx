@@ -46,8 +46,8 @@ export default function Header({ darkMode, toggleDark, onNavigate }) {
             <span>{darkMode ? 'Light' : 'Dark'}</span>
           </button>
 
-          <button className="btn-login">Log In</button>
-          <button className="btn-register">Register</button>
+          <button className="btn-login" onClick={() => onNavigate('login')}>Log In</button>
+          <button className="btn-register" onClick={() => onNavigate('register')}>Register</button>
         </div>
       </div>
     </header>
