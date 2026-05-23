@@ -1197,3 +1197,50 @@ input::placeholder {
 .loginfooter-text a:hover {
   text-decoration: underline;
 }
+
+span {
+  color:white;
+}
+
+.checkbox-group {
+  margin-bottom:10px;
+}
+
+a {
+  color:#C3E8A5;
+}
+
+.strength-text {
+      font-size: 0.75rem;
+      color: #a2a6af;
+      margin-top: 4px;
+}
+
+.strength-wrap {
+  margin-top: 6px;
+}
+
+.strength-bar {
+  display: flex;
+  gap: 4px;
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.strength-bar span {
+  flex: 1;
+  background: #1e5f3f;
+  border-radius: 2px;
+  transition: background 0.25s;
+}
+
+.strength-bar[data-score="1"] span:nth-child(-n+1) { background: #f87171; }
+.strength-bar[data-score="2"] span:nth-child(-n+2) { background: #fbbf24; }
+.strength-bar[data-score="3"] span:nth-child(-n+3) { background: #fbbf24; }
+.strength-bar[data-score="4"] span:nth-child(-n+4) { background: #4ade80; }
+
+.exst_accnt_text {
+   color:white;
+   margin-bottom:10px;
+}
