@@ -3,10 +3,48 @@ import { api } from '../api';
 
 export default function ForumRegister({ onNavigate }) {
 
+  // Create Variables for Form Fields
 
+  const [form, setForm] = useState({ username: "", email: "", password: "", confirm: "", agree: false });
+  const [status, setStatus] = useState("");
+
+  // Get Values from Form for Variables
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleChecked = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.checked });
+  };
+
+  // Submit Form Values to Server Side
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("http://localhost:3001/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      setStatus(res.ok ? "Registered!" : data.error || "Something went wrong");
+    } catch {
+      setStatus("Network error");
+    }
+  };
+
+  // Create Values to provide feedback for Password Strength
 
   const [passwordValue, setPasswordValue] = useState("");
   const [strengthValue, setStrengthValue] = useState("");
+
+  //Get Password from passwordValue State
+
+  const copyValue = () => {
+    setForm({ password: passwordValue }); // Copies the value into targetState
+  };
 
 
 
@@ -28,25 +66,23 @@ export default function ForumRegister({ onNavigate }) {
     text.textContent  = pw.length ? strengthLabels[score] : 'Enter a password';
   }
 
-  function showError(field, message) {
-    const input = document.getElementById(field);
-    const error = document.getElementById(field + '-error');
-    input.classList.add('error');
-    error.textContent = message;
-    error.classList.add('visible');
-  }
+  //function showError(field, message) {
+    //const input = document.getElementById(field);
+    //const error = document.getElementById(field + '-error');
+    //input.classList.add('error');
+    //error.textContent = message;
+    //error.classList.add('visible');
+  //}
 
-  function clearError(field) {
-    const input = document.getElementById(field);
-    const error = document.getElementById(field + '-error');
-    input.classList.remove('error');
-    error.classList.remove('visible');
-  }
+  //function clearError(field) {
+    //const input = document.getElementById(field);
+    //const error = document.getElementById(field + '-error');
+    //input.classList.remove('error');
+    //error.classList.remove('visible');
+  //}
 
   return (
     <div className="page-content">
-          <div className="forum-layout">
-            <div className="forum-main">
 
               <div className="auth-container">
                 <div className="card">
@@ -56,33 +92,33 @@ export default function ForumRegister({ onNavigate }) {
                     <p>Create your account to join the community.</p>
                   </div>
 
-                  <form id="register-form" onSubmit="handleRegister(event)" novalidate>
+                  <form id="register-form" onSubmit={handleSubmit} noValidate>
 
                     <div className="form-group">
                       <label htmlFor="username">Username</label>
                       <input type="text" id="username" name="username"
-                            placeholder="Choose a username" autoComplete="username"
+                            placeholder="Choose a username" value={form.username} autoComplete="username"
                             minLength="3" maxLength="20" required
-                            onInput="{clearError('username')}" />
+                            onChange={handleChange} />
                       <div className="field-error" id="username-error"></div>
                     </div>
 
                     <div className="form-group">
                       <label htmlFor="email">Email Address</label>
                       <input type="email" id="email" name="email"
-                            placeholder="you@example.com" autoComplete="email" required
-                            onInput="{clearError('email')}" />
+                            placeholder="you@example.com" value={form.email} autoComplete="email" required
+                            onChange={handleChange} />
                       <div className="field-error" id="email-error"></div>
                     </div>
 
                     <div className="form-group">
                       <label htmlFor="password">Password</label>
                       <input type="password" id="password" name="password"
-                            value={passwordValue}
+                            value={form.password}
 
                             placeholder="Min. 8 characters" autoComplete="new-password"
                             minLength="8" required
-                            onChange={(event) => {setPasswordValue(event.target.value);setStrengthValue(updateStrength(event.target.value));}} />
+                            onChange={(event) => {handleChange(event);setStrengthValue(updateStrength(event.target.value));}} />
                       <div className="strength-wrap">
                         <div className="strength-bar" id="strength-bar" data-score="0">
                           <span></span><span></span><span></span><span></span>
@@ -96,15 +132,15 @@ export default function ForumRegister({ onNavigate }) {
                       <label htmlFor="confirm">Confirm Password</label>
                       <input type="password" id="confirm" name="confirm"
                             placeholder="Re-enter your password" autoComplete="new-password" required
-                            onInput="{clearError('confirm')}" />
+                            onChange={handleChange} />
                       <div className="field-error" id="confirm-error"></div>
                     </div>
 
                     <div className="checkbox-group">
-                      <input type="checkbox" id="agree" name="agree" required /> <span> I agree to the <a href="#">Terms of Service</a> and <a href="#">Community Rules</a> </span>
+                      <input type="checkbox" id="agree" name="agree" checked={form.agree} onChange={handleChecked} required /> <span> I agree to the <a href="#">Terms of Service</a> and <a href="#">Community Rules</a> </span>
                     </div>
 
-                    <button type="submit" className="btn">Create Account</button>
+                    <button type="submit" className="btn" >Create Account</button>
 
                     <div className="divider"></div>
 
@@ -119,8 +155,6 @@ export default function ForumRegister({ onNavigate }) {
                 </div>
               </div>
 
-            </div>
-          </div>
         </div>
   )
 }
