@@ -2,6 +2,35 @@ import { useState, useEffect } from 'react'
 import { api } from '../api';
 
 export default function ForumLogin({ onNavigate }) {
+
+  const [form, setForm] = useState({ username: "", password: "", remember: false});
+  const [status, setStatus] = useState("");
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleChecked = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.checked });
+  };
+
+  // Submit Form Values to Server Side
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("http://localhost:3001/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      setStatus(res.ok ? "Logged In!" : data.error || "Something went wrong");
+    } catch {
+      setStatus("Network error");
+    }
+  };
+
   return (
     <div className="page-content">
         
@@ -13,23 +42,23 @@ export default function ForumLogin({ onNavigate }) {
                     <p>Welcome back! Please log in to continue.</p>
                     </div>
 
-                    <form id="login-form" onsubmit="handleLogin(event)" novalidate>
+                    <form id="login-form" onSubmit={handleSubmit} noValidate>
 
                     <div className="form-group">
-                        <label for="username">Username or Email</label>
-                        <input type="text" id="username" name="username"
-                            placeholder="Enter your username" autocomplete="username" required />
+                        <label htmlFor="username">Username or Email</label>
+                        <input type="text" id="username" name="username" value={form.username}
+                            placeholder="Enter your username" autoComplete="username" onChange={handleChange} required />
                     </div>
 
                     <div className="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" name="password"
-                            placeholder="Enter your password" autocomplete="current-password" required />
+                        <label htmlFor="password">Password</label>
+                        <input type="password" id="password" name="password" value={form.password}
+                            placeholder="Enter your password" autoComplete="current-password" onChange={handleChange} required />
                     </div>
 
                     <div className="row">
-                        <label className="remember">
-                        <input type="checkbox" name="remember" />
+                        <label className="remember" value={form.password}>
+                        <input type="checkbox" name="remember" onChange={handleChecked} />
                         Remember me
                         </label>
                         <a href="#" className="forgot">Forgot password?</a>
@@ -42,7 +71,7 @@ export default function ForumLogin({ onNavigate }) {
                     </form>
 
                     <p className="loginfooter-text">
-                    Don't have an account? <a href="register.html">Sign up</a>
+                    Don't have an account? <button className="btn-link" onClick={() => onNavigate('register')}>Sign up</button>
                     </p>
 
                     <div className="form-group">

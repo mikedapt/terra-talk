@@ -12,7 +12,7 @@ button { cursor: pointer; font-family: inherit; }
 
 /* ─── Theme Variables ─────────────────────────────────────────── */
 .light {
-  --bg-base:        #f0f2f5;
+  --bg-base:        #dfded9;
   --bg-surface:     #ffffff;
   --bg-header:      #1e4d1a;
   --bg-header-mid:  #2a6122;
@@ -21,6 +21,7 @@ button { cursor: pointer; font-family: inherit; }
   --bg-sidebar:     #ffffff;
   --bg-input:       #ffffff;
   --bg-post-op:     #f0f7ee;
+  --policy-card-bg: #f0f2f5;
 
   --text-primary:   #1a1a1a;
   --text-secondary: #555;
@@ -55,6 +56,7 @@ button { cursor: pointer; font-family: inherit; }
   --bg-sidebar:     #1c1e21;
   --bg-input:       #242628;
   --bg-post-op:     #1a2e18;
+  --policy-card-bg: #272727;
 
   --text-primary:   #e4e6eb;
   --text-secondary: #b0b3b8;
@@ -114,6 +116,10 @@ button { cursor: pointer; font-family: inherit; }
   gap: 14px;
   cursor: pointer;
   flex-shrink: 0;
+}
+
+.general-heading {
+  color: var(--text-primary);
 }
 
 /* ── Logo Slot ── */
@@ -1055,6 +1061,16 @@ button { cursor: pointer; font-family: inherit; }
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
+.policy-card {
+  background: var(--policy-card-bg);
+  border-radius: 8px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 1200px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  text-align: center;
+}
+
 .logo {
   text-align: center;
   margin-bottom: 2rem;
@@ -1211,6 +1227,18 @@ a {
   color:#C3E8A5;
 }
 
+.btn-link {
+  color:#C3E8A5;
+  background-color: rgba(0,0,0,0);
+  text-decoration: underline;
+  border: 1px solid rgba(0,0,0,0);
+  font-size: 16px;
+}
+
+.btn-link:hover {
+  color:#d6f1bf;
+}
+
 .strength-text {
       font-size: 0.75rem;
       color: #a2a6af;
@@ -1244,4 +1272,15 @@ a {
 .exst_accnt_text {
    color:white;
    margin-bottom:10px;
+}
+
+.center-div {
+  display:flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.list-container {
+  text-align:left;
+  width:80%;
 }

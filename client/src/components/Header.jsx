@@ -1,4 +1,26 @@
+//import ProfileMenu from './ProfileMenu'
+import { useAuth } from '../AuthContext';
+
 export default function Header({ darkMode, toggleDark, onNavigate }) {
+
+  const { user, logout } = useAuth();
+
+  function ProfileMenu({ username, onLogout }) {
+    const [open, setOpen] = useState(false);
+    return (
+      <div className="profile-menu">
+        <button onClick={() => setOpen(o => !o)}>{username} ▾</button>
+        {open && (
+          <div className="dropdown">
+            <Link to="/settings">Settings</Link>
+            <Link to={`/users/${username}`}>Profile</Link>
+            <button onClick={onLogout}>Log out</button>
+          </div>
+        )}
+      </div>
+    );
+ }
+
   return (
     <header className="header">
       <div className="header-inner">
@@ -45,9 +67,14 @@ export default function Header({ darkMode, toggleDark, onNavigate }) {
             )}
             <span>{darkMode ? 'Light' : 'Dark'}</span>
           </button>
-
-          <button className="btn-login" onClick={() => onNavigate('login')}>Log In</button>
-          <button className="btn-register" onClick={() => onNavigate('register')}>Register</button>
+          {user
+            ? <ProfileMenu username={user.username} onLogout={logout} />
+            : (
+              <>
+               <button className="btn-login" onClick={() => onNavigate('login')}>Log In</button>
+               <button className="btn-register" onClick={() => onNavigate('register')}>Register</button>
+              </>
+            )}
         </div>
       </div>
     </header>

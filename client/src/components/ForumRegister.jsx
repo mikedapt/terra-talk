@@ -137,7 +137,7 @@ export default function ForumRegister({ onNavigate }) {
                     </div>
 
                     <div className="checkbox-group">
-                      <input type="checkbox" id="agree" name="agree" checked={form.agree} onChange={handleChecked} required /> <span> I agree to the <a href="#">Terms of Service</a> and <a href="#">Community Rules</a> </span>
+                      <input type="checkbox" id="agree" name="agree" checked={form.agree} onChange={handleChecked} required /> <span> I agree to the <button className="btn-link" onClick={() => onNavigate('terms')}>Terms of Service</button> and <button className="btn-link" onClick={() => onNavigate('login')}>Community Rules</button> </span>
                     </div>
 
                     <button type="submit" className="btn" >Create Account</button>
@@ -148,7 +148,7 @@ export default function ForumRegister({ onNavigate }) {
 
                   </form>
 
-                  <p className="exst_accnt_text"> Already have an account? <a href="login.html">Log in</a></p>
+                  <p className="exst_accnt_text"> Already have an account? <button className="btn-link" onClick={() => onNavigate('login')}>Log in</button></p>
 
                   <button className="btn-submit-reply" onClick={() => onNavigate('home')}>Return to Homepage</button>
 

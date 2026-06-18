@@ -26,6 +26,11 @@ function authRequired(req, res, next) {
 // --- Auth ---
 
 
+app.get('/api/me', authRequired, (req, res) => {
+  const user = db.prepare('SELECT id, username FROM users WHERE id = ?').get(req.user.id);
+  res.json({ user });
+});
+
 app.post('/api/register', async (req, res) => {
   const { username, email, password, confirm, agree } = req.body;
   if (password == confirm) {
@@ -38,7 +43,7 @@ app.post('/api/register', async (req, res) => {
               const token = jwt.sign({ id: info.lastInsertRowid, username }, JWT_SECRET);
               res.json({ token, user: { id: info.lastInsertRowid, username } });
               //res.status(400).json({ error: agree });
-              console.log("success!");
+              console.log("register success!");
         } catch (e) {
           //res.status(400).json({ error: 'Username or email already taken' });
           res.status(400).json({ error: e });
@@ -55,15 +60,17 @@ app.post('/api/register', async (req, res) => {
   
 });
 
-//app.post('/api/login', async (req, res) => {
-//  const { username, password } = req.body;
-//  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
-//  if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-//    return res.status(401).json({ error: 'Invalid credentials' });
-//  }
-//  const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
-//  res.json({ token, user: { id: user.id, username: user.username } });
-//});
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+
+  if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+     return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
+  res.json({ token, user: { id: user.id, username: user.username } });
+  console.log("login success!");
+});
 
 // --- Servers ---
 app.get('/api/categories', (req, res) => {
