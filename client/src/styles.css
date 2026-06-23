@@ -1284,3 +1284,102 @@ a {
   text-align:left;
   width:80%;
 }
+
+.dropdown-container-d1 {
+  background-color: rgba(255,255,255,0.1);
+  color: white;
+  padding: 8px;
+  font-size: 12px;
+  border: 1px solid rgb(179, 179, 179);
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.dropdown-container-d1:hover {
+  background-color: rgba(255,255,255,0.3);
+  color: white;
+  padding: 8px;
+  font-size: 12px;
+  border: 1px solid rgb(122, 122, 122);
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.dropdown-d1 {
+  position: relative;
+}
+
+.dropdown-content-d1 {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 130px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  padding: 12px 16px;
+}
+
+.dropdown-d1:hover .dropdown-content-d1 {
+  display: block;
+}
+
+/* The container — this is the anchor the dropdown positions against */
+.profile-menu {
+  position: relative;        /* makes .dropdown position relative to THIS, not the page */
+  display: inline-block;
+}
+
+/* The username button that toggles the menu */
+.profile-menu > button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.profile-menu > button:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+/* The dropdown panel itself */
+.dropdown {
+  position: absolute;        /* lifts it out of flow so it floats over content */
+  top: calc(100% + 6px);     /* sits just below the button */
+  right: 0;                  /* aligns its right edge to the button's right edge */
+  min-width: 160px;
+  background: #2a6625;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 100;              /* keeps it above other page content */
+}
+
+/* Both the links and the logout button, styled identically */
+.dropdown a,
+.dropdown button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: #ddd;
+  text-decoration: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.dropdown a:hover,
+.dropdown button:hover {
+  background: #418a3b;
+  color: #fff;
+}

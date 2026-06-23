@@ -1,5 +1,11 @@
 //import ProfileMenu from './ProfileMenu'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../AuthContext';
+//import { Link } from 'react-router-dom';
+
+
+//<Link to="/settings">Settings</Link>
+//<Link to={`/users/${username}`}>Profile</Link>
 
 export default function Header({ darkMode, toggleDark, onNavigate }) {
 
@@ -12,8 +18,7 @@ export default function Header({ darkMode, toggleDark, onNavigate }) {
         <button onClick={() => setOpen(o => !o)}>{username} ▾</button>
         {open && (
           <div className="dropdown">
-            <Link to="/settings">Settings</Link>
-            <Link to={`/users/${username}`}>Profile</Link>
+            
             <button onClick={onLogout}>Log out</button>
           </div>
         )}

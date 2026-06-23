@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { api } from '../api';
+import { useAuth } from '../AuthContext';
 
 export default function ForumLogin({ onNavigate }) {
 
   const [form, setForm] = useState({ username: "", password: "", remember: false});
   const [status, setStatus] = useState("");
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -26,6 +28,9 @@ export default function ForumLogin({ onNavigate }) {
       });
       const data = await res.json();
       setStatus(res.ok ? "Logged In!" : data.error || "Something went wrong");
+      login(data.token, data.user);
+      onNavigate('home');
+
     } catch {
       setStatus("Network error");
     }
