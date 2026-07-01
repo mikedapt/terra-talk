@@ -3,18 +3,28 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../AuthContext';
 //import { Link } from 'react-router-dom';
 
+//import DefaultProfile from "../assets/profiles/default_admin_profile_icon.png"; 
+
+
 
 //<Link to="/settings">Settings</Link>
 //<Link to={`/users/${username}`}>Profile</Link>
 
+//{user?.profile_path && (
+//           <img className="profile-icon" src={`http://localhost:3001/profiles/${user.profile_path}`}></img>
+//)}
+
 export default function Header({ darkMode, toggleDark, onNavigate }) {
 
-  const { user, logout } = useAuth();
+  const { user,  logout } = useAuth();
 
   function ProfileMenu({ username, onLogout }) {
     const [open, setOpen] = useState(false);
     return (
       <div className="profile-menu">
+        {user?.profile_path && (
+           <img className="profile-icon" src={`http://localhost:3001/profiles/${user.profile_path}`}></img>
+        )}
         <button onClick={() => setOpen(o => !o)}>{username} ▾</button>
         {open && (
           <div className="dropdown">

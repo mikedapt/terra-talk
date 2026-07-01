@@ -4,12 +4,25 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import db from './db.js';
 
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
+
+
+
+// Create a path for uploaded content to the server
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 //app.use(cors({ origin: 'http://localhost:5173'}));
 app.use(express.json());
+
+
 
 // auth middleware
 function authRequired(req, res, next) {
@@ -27,7 +40,7 @@ function authRequired(req, res, next) {
 
 
 app.get('/api/me', authRequired, (req, res) => {
-  const user = db.prepare('SELECT id, username FROM users WHERE id = ?').get(req.user.id);
+  const user = db.prepare('SELECT id, username, profile_path FROM users WHERE id = ?').get(req.user.id);
   res.json({ user });
 });
 
@@ -36,10 +49,11 @@ app.post('/api/register', async (req, res) => {
   if (password == confirm) {
      if (agree == true) {
          try {
+              const proicon = "default_profile_icon.png";
               const hash = await bcrypt.hash(password, 10);
               const info = db.prepare(
-              'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)'
-              ).run(username, email, hash);
+              'INSERT INTO users (username, email, profile_path, password_hash) VALUES (?, ?, ?, ?)'
+              ).run(username, email, proicon, hash);
               const token = jwt.sign({ id: info.lastInsertRowid, username }, JWT_SECRET);
               res.json({ token, user: { id: info.lastInsertRowid, username } });
               //res.status(400).json({ error: agree });
@@ -60,15 +74,36 @@ app.post('/api/register', async (req, res) => {
   
 });
 
+app.post('/api/forgotpwd', async (req, res) => {
+  const { username } = req.body;
+
+  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+
+  const email = db.prepare('SELECT * FROM users WHERE email = ?').get(username);
+
+  if (!user) {
+     if (!email) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+     } else {
+       console.log("login success!"); 
+     }
+  } else {
+    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
+    res.json({ token, user: { id: user.id, username: user.username } });
+    console.log("login success!");
+  }
+  
+});
+
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
-  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+  const user = db.prepare('SELECT id, username, password_hash, profile_path FROM users WHERE username = ?').get(username);
 
   if (!user || !(await bcrypt.compare(password, user.password_hash))) {
      return res.status(401).json({ error: 'Invalid credentials' });
   }
   const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
-  res.json({ token, user: { id: user.id, username: user.username } });
+  res.json({ token, user: { id: user.id, username: user.username, profile_path: user.profile_path } });
   console.log("login success!");
 });
 

@@ -1152,6 +1152,9 @@ input::placeholder {
   color: #4ade80;
   text-decoration: none;
   font-size: 0.85rem;
+  cursor: pointer;
+  background-color: rgba(0,0,0,0);
+  border: 1px solid rgba(0,0,0,0);
 }
 
 .forgot:hover {
@@ -1325,7 +1328,7 @@ a {
 /* The container — this is the anchor the dropdown positions against */
 .profile-menu {
   position: relative;        /* makes .dropdown position relative to THIS, not the page */
-  display: inline-block;
+  display: flex;
 }
 
 /* The username button that toggles the menu */
@@ -1344,6 +1347,12 @@ a {
 
 .profile-menu > button:hover {
   background: rgba(255,255,255,0.3);
+}
+
+.profile-icon {
+  width: 50px;
+  height: 50px;
+  margin-right:10px;
 }
 
 /* The dropdown panel itself */
