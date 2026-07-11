@@ -30,6 +30,7 @@ export default function ForumRegister({ onNavigate }) {
       });
       const data = await res.json();
       setStatus(res.ok ? "Registered!" : data.error || "Something went wrong");
+      onNavigate('home');
     } catch {
       setStatus("Network error");
     }

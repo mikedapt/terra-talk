@@ -3,6 +3,7 @@ import Header from './components/Header'
 import ForumHome from './components/ForumHome'
 import ForumLogin from './components/ForumLogin'
 import ForumRegister from './components/ForumRegister'
+import AdminSettings from './components/AdminSettings';
 import ForgotPassword from './components/ForgotPassword'
 import TermsOfService from './components/TermsOfService'
 import CategoryView from './components/CategoryView'
@@ -26,6 +27,7 @@ export default function App() {
       {view.page === 'home' && <ForumHome onNavigate={navigate} />}
       {view.page === 'login' && <ForumLogin onNavigate={navigate} />}
       {view.page === 'register' && <ForumRegister onNavigate={navigate} />}
+      {view.page === 'adminsettings' && <AdminSettings onNavigate={navigate} />}
       {view.page === 'forgotpwd' && <ForgotPassword onNavigate={navigate} />}
       {view.page === 'terms' && <TermsOfService onNavigate={navigate} />}
       {view.page === 'category' && <CategoryView category={view.category} onNavigate={navigate} />}

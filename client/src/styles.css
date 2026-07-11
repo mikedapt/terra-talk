@@ -1071,6 +1071,32 @@ button { cursor: pointer; font-family: inherit; }
   text-align: center;
 }
 
+.admin-card {
+  background: var(--policy-card-bg);
+  border-radius: 8px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 1200px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  margin-top:10px;
+}
+
+.admin-header {
+  text-align: center;
+}
+
+.admin-header h1 {
+  color: green;
+}
+
+.admin-content {
+  text-align: left;
+}
+
+.admin-content h2 {
+  color: green;
+}
+
 .logo {
   text-align: center;
   margin-bottom: 2rem;

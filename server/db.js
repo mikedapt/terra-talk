@@ -19,11 +19,11 @@ db.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS categories (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    name        TEXT NOT NULL,
-    description TEXT,
-    created_by  INTEGER NOT NULL,
-    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+    name                 TEXT NOT NULL,
+    description          TEXT,
+    created_by           INTEGER NOT NULL,
+    created_at           DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by) REFERENCES users(id)
   );
 

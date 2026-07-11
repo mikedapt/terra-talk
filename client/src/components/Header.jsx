@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../AuthContext';
 //import { Link } from 'react-router-dom';
-
 //import DefaultProfile from "../assets/profiles/default_admin_profile_icon.png"; 
 
 
@@ -18,6 +17,16 @@ export default function Header({ darkMode, toggleDark, onNavigate }) {
 
   const { user,  logout } = useAuth();
 
+  function AdminMenu({username}) {
+    if (username == 'admin') {
+       return (
+              <button onClick={() => onNavigate('adminsettings')}>Forum Settings</button>
+       );
+    } else {
+       return null;
+    }
+  }
+
   function ProfileMenu({ username, onLogout }) {
     const [open, setOpen] = useState(false);
     return (
@@ -28,7 +37,7 @@ export default function Header({ darkMode, toggleDark, onNavigate }) {
         <button onClick={() => setOpen(o => !o)}>{username} ▾</button>
         {open && (
           <div className="dropdown">
-            
+            <AdminMenu username={username}></AdminMenu>
             <button onClick={onLogout}>Log out</button>
           </div>
         )}
