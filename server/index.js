@@ -117,6 +117,18 @@ app.get('/api/categories', (req, res) => {
   res.json(rows);
 });
 
+app.post('/api/categories', async (req, res) => {
+  const { catname, catdesc, catauthor } = req.body;
+  const catcheck = db.prepare('SELECT id, name, description FROM categories WHERE name = ?').get(catname);
+
+  if ( !catcheck ) {
+     db.prepare('INSERT INTO categories (name, description, created_by) VALUES (?, ?, ?)').run(catname, catdesc, catauthor);
+  } else {
+     return res.status(401).json({ error: 'ERROR: Category Already Exist' });
+  }
+
+});
+
 //app.post('/api/categories', authRequired, (req, res) => {
 //  const { name, description} = req.body;
 //  const info = db.prepare(

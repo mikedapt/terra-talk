@@ -1418,3 +1418,7 @@ a {
   background: #418a3b;
   color: #fff;
 }
+
+#hidden {
+   display:none;
+}

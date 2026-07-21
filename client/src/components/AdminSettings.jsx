@@ -6,6 +6,35 @@ export default function TermsOfService({ onNavigate }) {
 
   const { user } = useAuth();
 
+  const [catform, setCatForm] = useState({ catname: "", catdesc: "", catauthor: user.id});
+  const [status, setStatus] = useState("");
+
+  // Submit Form Values to Server Side
+
+  const handleChange = (e) => {
+    setCatForm({ ...catform, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await fetch("http://localhost:3001/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(catform),
+      });
+      const data = await res.json();
+      setStatus(res.ok ? "Category Added!" : data.error || "Something went wrong");
+      window.location.reload()
+
+    } catch {
+      setStatus("Network error");
+    }
+  };
+
+
+
   if (user.username == 'admin') {
 
       return (
@@ -38,6 +67,31 @@ export default function TermsOfService({ onNavigate }) {
                           (topics, threads, posts) </p>
                         <br></br>
                         <p> + Add Categories </p>
+
+                        <form id="addcat-form" onSubmit={handleSubmit} noValidate>
+
+                          <div className="form-group">
+                              <label htmlFor="catname">Category Name</label>
+                              <input type="text" id="catname" name="catname" value= {catform.catname}
+                                  placeholder="Enter the Category Name" autoComplete="catname" onChange={handleChange} required />
+                          </div>
+
+                          <div className="form-group">
+                              <label htmlFor="catdesc">Category Description</label>
+                              <input type="text" id="catdesc" name="catdesc" value={catform.catdesc}
+                                  placeholder="Enter the Category Description" autoComplete="catdesc" onChange={handleChange} required />
+                          </div>
+
+                          <div className="form-group" id="hidden">
+                              <label htmlFor="catauthor"></label>
+                              <input type="number" id="catauthor" name="catauthor" value={catform.catauthor}
+                                  placeholder="Enter the Category Description" autoComplete="catauthor" required />
+                          </div>
+
+                          <button type="submit" className="btn">Add Category</button>
+
+                        </form>
+
                         <br></br>
                         <p> - Remove Categories </p>
                         <br></br>
