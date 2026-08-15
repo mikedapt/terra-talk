@@ -90,6 +90,133 @@ export default function TermsOfService({ onNavigate }) {
                   <br></br>
                   <hr></hr>
                   <br></br>
+                  <h3><b>4. Your content and license</b></h3>
+                  <br></br>
+                  <p><b>4.1.</b> <b>You own your content.</b> You retain ownership of the posts, images, and other material you submit ("User Content").</p>
+                  <br></br>
+                  <p><b>4.2.</b> <b>License to us.</b> By posting User Content, you grant us a non-exclusive, worldwide, royalty-free license to host, store, display, 
+                  reproduce, and distribute that content for the purpose of operating and promoting the Forum. This license ends when you delete your content, 
+                  except for copies retained in backups or where others have already quoted or shared it.</p>
+                  <br></br>
+                  <p><b>4.3.</b> <b>Your responsibilities.</b> You represent that you have the rights to post your User Content and that it does not violate these Terms or any law.</p>
+                  <br></br>
+                  <p><b>4.4.</b> <b>No obligation to host.</b> We may remove or refuse any User Content at our discretion, but we are not obligated to monitor everything posted.</p>
+                  <br></br>
+                  <hr></hr>
+                  <br></br>
+                  <h3><b>5. Intellectual property and trademarks</b></h3>
+                  <br></br>
+                  <p><b>5.1.</b> The Forum software is open source and distributed under its own license 
+                  ([SOFTWARE LICENSE NAME, e.g. MIT / AGPL-3.0] — see [LINK]). Nothing in these Terms restricts your rights under that software license. 
+                  These Terms govern your use of this hosted instance, not the underlying code.</p>
+                  <br></br>
+                  <p><b>5.2.</b> Our name, logo, and branding belong to [OPERATOR] and may not be used without permission.</p>
+                  <br></br>
+                  <p><b>5.3.</b> <b>Not affiliated with game publishers.</b> [FORUM NAME] is an independent, fan-run community. We are not affiliated with, 
+                  endorsed by, or sponsored by Mojang Studios, Microsoft (the makers of Minecraft), Hypixel Studios, Riot Games (associated with Hytale), 
+                  or any other game publisher. Minecraft, Hytale, and related names and logos are trademarks of their respective owners.</p>
+                  <br></br>
+                  <p><b>5.4.</b> When discussing or sharing game-related content (servers, mods, maps, etc.), you are responsible for complying with the relevant 
+                  publisher's terms, EULA, and brand/usage guidelines.</p>
+                  <br></br>
+                  <hr></hr>
+                  <br></br>
+                  <h3><b>6. Moderation and enforcement</b></h3>
+                  <br></br>
+                  <p><b>6.1.</b> Moderators and administrators may edit, hide, lock, or remove content and may warn, suspend, or ban accounts for violations of 
+                  these Terms or the community rules.</p>
+                  <br></br>
+                  <p><b>6.2.</b> We aim to apply rules fairly, but moderation decisions are ultimately at our discretion.</p>
+                  <br></br>
+                  <p><b>6.3.</b> Serious violations — especially anything involving child safety, threats of violence, or illegal activity — may be reported to 
+                  law enforcement or relevant authorities.</p>
+                  <br></br>
+                  <p><b>6.4.</b> If you believe a moderation action was a mistake, you may appeal by contacting [CONTACT EMAIL / APPEAL CHANNEL].</p>
+                  <br></br>
+                  <hr></hr>
+                  <br></br>
+                  <h3><b>7. Reporting content</b></h3>
+                  <br></br>
+                  <p>If you see content that violates these Terms, please report it using [REPORT FEATURE / EMAIL]. To report a copyright concern, 
+                  include enough detail to identify the work and the allegedly infringing post, and send it to [DMCA / COPYRIGHT CONTACT].</p>
+                  <br></br>
+                  <hr></hr>
+                  <br></br>
+                  <h3><b>8. Third-party links and services</b></h3>
+                  <br></br>
+                  <p>The Forum may contain links to third-party sites, game servers, or services we do not control. We are not responsible for their content, 
+                  practices, or safety. Use them at your own risk and review their terms.</p>
+                  <br></br>
+                  <hr></hr>
+                  <br></br>
+                  <h3><b>9. Privacy</b></h3>
+                  <br></br>
+                  <p>Your use of the Forum is also governed by our Privacy Policy, which explains what data we collect and how we use it. Please review it.</p>
+                  <br></br>
+                  <hr></hr>
+                  <br></br>
+                  <h3><b>10. Disclaimers</b></h3>
+                  <br></br>
+                  <p>The Forum is provided "as is" and "as available," without warranties of any kind, whether express or implied, including fitness for a 
+                  particular purpose, accuracy, or non-infringement. We do not guarantee that the Forum will be uninterrupted, secure, or error-free, or that any 
+                  content posted by users is accurate or reliable.</p>
+                  <br></br>
+                  <hr></hr>
+                  <br></br>
+                  <h3><b>11. Limitation of liability</b></h3>
+                  <br></br>
+                  <p>To the maximum extent permitted by law, [OPERATOR] and its contributors and moderators will not be liable for any indirect, incidental, special, 
+                  consequential, or punitive damages, or any loss of data, goodwill, or other intangible losses, arising from your use of the Forum. Where liability 
+                  cannot be excluded, it is limited to the maximum extent allowed by law. Some jurisdictions do not allow certain limitations, so parts of this section 
+                  may not apply to you.</p>
+                  <br></br>
+                  <hr></hr>
+                  <br></br>
+                  <h3><b>12. Indemnification</b></h3>
+                  <br></br>
+                  <p>You agree to indemnify and hold harmless [OPERATOR], its contributors, and its moderators from any claims, damages, or expenses arising out of 
+                  your User Content, your use of the Forum, or your violation of these Terms or any law.</p>
+                  <br></br>
+                  <hr></hr>
+                  <br></br>
+                  <h3><b>13. Termination</b></h3>
+                  <br></br>
+                  <p><b>13.1.</b> You may stop using the Forum and delete your account at any time.</p>
+                  <br></br>
+                  <p><b>13.2.</b> We may suspend or terminate your access at any time, with or without notice, for violations of these Terms or to protect the community.</p>
+                  <br></br>
+                  <p><b>13.3.</b> Sections that by their nature should survive termination (including content license for already-shared content, disclaimers, 
+                  limitation of liability, and indemnification) continue to apply.</p>
+                  <br></br>
+                  <hr></hr>
+                  <br></br>
+                  <h3><b>14. Changes to these Terms</b></h3>
+                  <br></br>
+                  <p>We may update these Terms from time to time. If we make material changes, we will provide reasonable notice (for example, a notice on the Forum 
+                  or by email). Your continued use after changes take effect means you accept the updated Terms.</p>
+                  <br></br>
+                  <hr></hr>
+                  <br></br>
+                  <h3><b>15. Governing law and disputes</b></h3>
+                  <br></br>
+                  <p>These Terms are governed by the laws of [JURISDICTION / COUNTRY / STATE], without regard to conflict-of-law rules. Any disputes will be handled 
+                  in the courts of [VENUE], unless your local law gives you the right to bring claims elsewhere.</p>
+                  <br></br>
+                  <hr></hr>
+                  <br></br>
+                  <h3><b>16. Contact</b></h3>
+                  <br></br>
+                  <p>Questions about these Terms? Contact us at:</p>
+                  <br></br>
+                  <p><b>[OPERATOR NAME]</b></p>
+                  <p>[CONTACT EMAIL]</p>
+                  <p>[OPTIONAL: mailing address / Discord / support link]</p>
+                  <br></br>
+                  <hr></hr>
+                  <br></br>
+                  <p><i>This document is a community template provided with the [FORUM SOFTWARE NAME] open-source project. It is not legal advice. 
+                  Operators are responsible for ensuring their Terms comply with the laws that apply to them and their users.</i></p>
+                  <br></br>
 
 
 
