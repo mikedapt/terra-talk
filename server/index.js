@@ -7,6 +7,39 @@ import db from './db.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+
+//password reset 
+
+import crypto from 'crypto';
+import { sendResetEmail } from './mailer.js';
+
+const RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+//password reset limits
+
+import rateLimit from 'express-rate-limit';
+import { ipKeyGenerator } from 'express-rate-limit';
+
+const resetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,        // 1 hour
+  limit: 5,                         // 5 requests per IP per window
+  standardHeaders: 'draft-7',       // RateLimit-* response headers
+  legacyHeaders: false,             // drop the old X-RateLimit-* headers
+  keyGenerator: (req, res) =>
+    `${ipKeyGenerator(req.ip)}:${(req.body?.username || '').toLowerCase()}`,
+  message: { error: 'Too many reset requests. Try again in an hour.' },
+});
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,        // 15 minutes
+  limit: 10,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts. Try again shortly.' },
+});
+
+
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -74,25 +107,59 @@ app.post('/api/register', async (req, res) => {
   
 });
 
-app.post('/api/forgotpwd', async (req, res) => {
+app.post('/api/forgotpwd', resetLimiter, async (req, res) => {
   const { username } = req.body;
 
-  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+  const user = db.prepare('SELECT * FROM users WHERE username = ? OR email = ?').get(username, username);
 
-  const email = db.prepare('SELECT * FROM users WHERE email = ?').get(username);
+  const generic = { message: 'If that account exists, a reset link has been sent.' };
 
   if (!user) {
-     if (!email) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-     } else {
-       console.log("login success!"); 
-     }
-  } else {
-    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
-    res.json({ token, user: { id: user.id, username: user.username } });
-    console.log("login success!");
+        return res.json(generic);
   }
+
+  const token = crypto.randomBytes(32).toString('hex');
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+  // invalidate any outstanding tokens for this user
+  db.prepare('DELETE FROM password_resets WHERE user_id = ?').run(user.id);
+  db.prepare(
+    'INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?, ?, ?)'
+  ).run(user.id, tokenHash, Date.now() + RESET_TTL_MS);
+
+  const link = `http://localhost:5173/reset?token=${token}`;
+
+  try {
+    await sendResetEmail(user.email, link);
+    console.log('reset link for', user.email, '->', link);
+  } catch (e) {
+    console.error('mail send failed:', e.message);
+  }
+
+  res.json(generic);
   
+});
+
+app.post('/api/resetpwd', resetLimiter, async (req, res) => {
+  const { token, password, confirm } = req.body;
+
+  if (!token || !password) return res.status(400).json({ error: 'Missing fields' });
+  if (password !== confirm) return res.status(400).json({ error: 'Passwords do not match' });
+
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const row = db.prepare(
+    'SELECT * FROM password_resets WHERE token_hash = ?'
+  ).get(tokenHash);
+
+  if (!row || row.used_at || row.expires_at < Date.now()) {
+    return res.status(400).json({ error: 'Invalid or expired reset link' });
+  }
+
+  const hash = await bcrypt.hash(password, 10);
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, row.user_id);
+  db.prepare('UPDATE password_resets SET used_at = ? WHERE id = ?').run(Date.now(), row.id);
+
+  res.json({ message: 'Password updated. You can now log in.' });
 });
 
 app.post('/api/login', async (req, res) => {

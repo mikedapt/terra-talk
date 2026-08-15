@@ -29,7 +29,7 @@ export default function ForumLogin({ onNavigate }) {
       const data = await res.json();
       setStatus(res.ok ? "Logged In!" : data.error || "Something went wrong");
       login(data.token, data.user);
-      onNavigate('home');
+      //onNavigate('home');
 
     } catch {
       setStatus("Network error");

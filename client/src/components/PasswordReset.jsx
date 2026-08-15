@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { api } from '../api';
 
-export default function ForgotPassword({ onNavigate }) {
+export default function PasswordReset({ onNavigate }) {
 
-  const [form, setForm] = useState({ username: ""});
+  const [form, setForm] = useState({ password: "", confirm: ""});
   const [status, setStatus] = useState("");
   
   const handleChange = (e) => {
@@ -17,7 +17,7 @@ export default function ForgotPassword({ onNavigate }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:3001/api/forgotpwd", {
+      const res = await fetch("http://localhost:3001/api/resetpwd", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -30,13 +30,6 @@ export default function ForgotPassword({ onNavigate }) {
     }
   };
 
-  useEffect(() => {
-  const token = new URLSearchParams(window.location.search).get('token');
-  if (token) {
-      setResetToken(token);
-      onNavigate('reset');
-    }
-  }, []);
 
   
 
@@ -47,19 +40,25 @@ export default function ForgotPassword({ onNavigate }) {
                 <div className="card">
 
                     <div className="logo">
-                    <h1>Forgot Your Password? No Problem!</h1>
+                    <h1>Enter New Password</h1>
                     <p>Enter either your username or email to receive a request to change it!</p>
                     </div>
 
                     <form id="forgot-form" onSubmit={handleSubmit} noValidate>
 
                     <div className="form-group">
-                        <label htmlFor="username">Username or Email</label>
-                        <input type="text" id="username" name="username" value={form.username}
-                            placeholder="Enter your username" autoComplete="username" onChange={handleChange} required />
+                        <label htmlFor="password">New Password</label>
+                        <input type="text" id="password" name="password" value={form.password}
+                            placeholder="Enter password" autoComplete="password" onChange={handleChange} required />
                     </div>
 
-                    <button type="submit" className="btn">Get Password</button>
+                    <div className="form-group">
+                        <label htmlFor="confirm">Confirm Password</label>
+                        <input type="text" id="confirm" name="confirm" value={form.confirm}
+                            placeholder="Enter password" autoComplete="confirm" onChange={handleChange} required />
+                    </div>
+
+                    <button type="submit" className="btn">Reset Password</button>
 
                     <div className="divider"></div>
 
