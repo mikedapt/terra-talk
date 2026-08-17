@@ -4,6 +4,7 @@ import ForumHome from './components/ForumHome'
 import ForumLogin from './components/ForumLogin'
 import ForumRegister from './components/ForumRegister'
 import AdminSettings from './components/AdminSettings';
+import ProfileSettings from './components/ProfileSettings';
 import ForgotPassword from './components/ForgotPassword'
 import PasswordReset from './components/PasswordReset'
 import TermsOfService from './components/TermsOfService'
@@ -29,13 +30,14 @@ export default function App() {
       {view.page === 'login' && <ForumLogin onNavigate={navigate} />}
       {view.page === 'register' && <ForumRegister onNavigate={navigate} />}
       {view.page === 'adminsettings' && <AdminSettings onNavigate={navigate} />}
+      {view.page === 'profilesettings' && <ProfileSettings onNavigate={navigate} />}
       {view.page === 'forgotpwd' && <ForgotPassword onNavigate={navigate} />}
       {view.page === 'reset' && <PasswordReset onNavigate={navigate} />}
       {view.page === 'terms' && <TermsOfService onNavigate={navigate} />}
       {view.page === 'category' && <CategoryView category={view.category} onNavigate={navigate} />}
       {view.page === 'thread' && <ThreadView thread={view.thread} category={view.category} onNavigate={navigate} />}
 
-      <Footer />
+      <Footer onNavigate={navigate} />
     </div>
   )
 }

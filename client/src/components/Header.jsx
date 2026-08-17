@@ -38,6 +38,7 @@ export default function Header({ darkMode, toggleDark, onNavigate }) {
         {open && (
           <div className="dropdown">
             <AdminMenu username={username}></AdminMenu>
+            <button onClick={() => onNavigate('profilesettings')}>Profile Settings</button>
             <button onClick={onLogout}>Log out</button>
           </div>
         )}

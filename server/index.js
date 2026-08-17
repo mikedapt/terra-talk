@@ -88,7 +88,7 @@ app.post('/api/register', async (req, res) => {
               'INSERT INTO users (username, email, profile_path, password_hash) VALUES (?, ?, ?, ?)'
               ).run(username, email, proicon, hash);
               const token = jwt.sign({ id: info.lastInsertRowid, username }, JWT_SECRET);
-              res.json({ token, user: { id: info.lastInsertRowid, username } });
+              res.json({ token, user: { id: info.lastInsertRowid, username, profile_path: proicon } });
               //res.status(400).json({ error: agree });
               console.log("register success!");
         } catch (e) {

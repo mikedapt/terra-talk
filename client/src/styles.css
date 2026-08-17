@@ -1381,6 +1381,44 @@ a {
   margin-right:10px;
 }
 
+.profile-card {
+  background: var(--policy-card-bg);
+  border-radius: 8px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 1200px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  margin-top:10px;
+}
+
+.profile-header {
+  text-align: center;
+}
+
+.profile-header h1 {
+  color: green;
+}
+
+.profile-content {
+  text-align: left;
+}
+
+.profile-content h2 {
+  color: green;
+}
+
+.avatar-portrait {
+  width: 300px;
+  height: 300px;
+}
+
+.avatar-backdrop {
+  background-color:#6d6d6d;
+  border-radius:20px;
+  padding-top:5px;
+  padding-bottom:5px;
+}
+
 /* The dropdown panel itself */
 .dropdown {
   position: absolute;        /* lifts it out of flow so it floats over content */
