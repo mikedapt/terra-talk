@@ -7,6 +7,10 @@ import db from './db.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import multer from 'multer';
+import fs from 'fs';
+
+
 
 //password reset 
 
@@ -57,6 +61,40 @@ app.use(express.json());
 
 
 
+// Uploader Variables
+
+const PROFILE_DIR = path.join(__dirname, 'public', 'profiles');
+fs.mkdirSync(PROFILE_DIR, { recursive: true });
+ 
+const ALLOWED_TYPES = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'image/gif': '.gif',
+};
+ 
+const avatarUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, PROFILE_DIR),
+    filename: (req, file, cb) => {
+      // req.user exists here because authRequired runs before multer on the route below.
+      // Timestamp in the name means the browser never serves a stale cached avatar.
+      const ext = ALLOWED_TYPES[file.mimetype] || '.png';
+      cb(null, `user_${req.user.id}_${Date.now()}${ext}`);
+    },
+  }),
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
+  fileFilter: (req, file, cb) => {
+    if (!ALLOWED_TYPES[file.mimetype]) {
+      return cb(new Error('Choose a JPEG, PNG, WebP, or GIF image.'));
+    }
+    cb(null, true);
+  },
+});
+
+
+
+
 // auth middleware
 function authRequired(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
@@ -76,6 +114,29 @@ app.get('/api/me', authRequired, (req, res) => {
   const user = db.prepare('SELECT id, username, profile_path FROM users WHERE id = ?').get(req.user.id);
   res.json({ user });
 });
+
+
+
+app.post('/api/me/avatar', authRequired, avatarUpload.single('avatar'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No image was uploaded.' });
+ 
+  const current = db
+    .prepare('SELECT profile_path FROM users WHERE id = ?')
+    .get(req.user.id);
+ 
+  db.prepare('UPDATE users SET profile_path = ? WHERE id = ?')
+    .run(req.file.filename, req.user.id);
+ 
+  // Clean up the previous upload, but never the shared default icon
+  if (current?.profile_path && current.profile_path !== 'default_profile_icon.png' && current.profile_path !== 'default_admin_profile_icon.png') {
+    fs.unlink(path.join(PROFILE_DIR, current.profile_path), () => {});
+  }
+ 
+  res.json({ profile_path: req.file.filename });
+});
+
+
+
 
 app.post('/api/register', async (req, res) => {
   const { username, email, password, confirm, agree } = req.body;
@@ -106,6 +167,7 @@ app.post('/api/register', async (req, res) => {
   }
   
 });
+
 
 app.post('/api/forgotpwd', resetLimiter, async (req, res) => {
   const { username } = req.body;
@@ -260,5 +322,18 @@ app.post('/api/categories', async (req, res) => {
 //  ).run(req.params.id, req.user.id, body);
 //  res.json({ id: info.lastInsertRowid });
 //});
+
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({
+      error: err.code === 'LIMIT_FILE_SIZE'
+        ? 'Image must be under 2 MB.'
+        : err.message,
+    });
+  }
+  if (err) return res.status(400).json({ error: err.message });
+  next();
+});
+
 
 app.listen(3001, () => console.log('API on http://localhost:3001'));
