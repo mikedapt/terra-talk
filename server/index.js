@@ -237,14 +237,26 @@ app.post('/api/login', async (req, res) => {
 });
 
 // --- Servers ---
+/**app.get("/api/categories", (req, res) => {
+  db.all("SELECT id, name, description FROM categories ORDER BY name", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});**/
+
 app.get('/api/categories', (req, res) => {
+  const rows = db.prepare(`SELECT id, name, description FROM categories ORDER BY name`).all();
+  res.json(rows);
+});
+
+/**app.get('/api/categories', (req, res) => {
   const rows = db.prepare(`
     SELECT s.*, u.username AS creator
     FROM categories s JOIN users u ON u.id = s.created_by
     ORDER BY s.created_at DESC
   `).all();
   res.json(rows);
-});
+});**/
 
 app.post('/api/categories', async (req, res) => {
   const { catname, catdesc, catauthor } = req.body;
@@ -275,6 +287,19 @@ app.post('/api/categories', async (req, res) => {
 //  `).all();
 //  res.json(rows);
 //});
+
+app.post('/api/topics', async (req, res) => {
+  const { topname, topdesc, topcat, topicon, topcolor, topauthor } = req.body;
+  console.log(topname, topdesc, topcat, topicon, topcolor, topauthor);
+  const topcheck = db.prepare('SELECT id, category_id, name, icon, title, description, accentColor FROM topics WHERE name = ?').get(topname);
+
+  if ( !topcheck ) {
+     db.prepare('INSERT INTO topics (category_id, name, icon, title, description, accentColor, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)').run(topcat, topname, topicon, topname, topdesc, topcolor, topauthor);
+  } else {
+     return res.status(401).json({ error: 'ERROR: Topic Already Exist' });
+  }
+
+});
 
 //app.post('/api/categories/:id/topics', authRequired, (req, res) => {
 //  const { name, title, description} = req.body;

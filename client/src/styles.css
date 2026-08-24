@@ -1131,7 +1131,8 @@ label {
 
 input[type="text"],
 input[type="password"],
-input[type="email"] {
+input[type="email"],
+select {
   width: 100%;
   background: #dadada;
   border-radius: 5px;
@@ -1459,4 +1460,9 @@ a {
 
 #hidden {
    display:none;
+}
+
+.color-value {
+  color: var(--text-primary);
+  margin-left:10px;
 }
