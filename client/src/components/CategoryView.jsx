@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import { api } from '../api';
+import { useAuth } from '../AuthContext';
 
 export default function CategoryView({ category, onNavigate }) {
   const pinnedThreads = category.threads.filter((t) => t.pinned)
   const normalThreads = category.threads.filter((t) => !t.pinned)
+
+  const { user } = useAuth();
 
   //const [topics, setTopics] = useState([]);
   //const [loading, setLoading] = useState(true);
