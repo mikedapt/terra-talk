@@ -1134,9 +1134,9 @@ input[type="password"],
 input[type="email"],
 select {
   width: 100%;
-  background: #dadada;
+  background-color: var(--bg-input);
   border-radius: 5px;
-  color: #252525;
+  color: var(--text-primary);
   font-size: 0.95rem;
   padding: 0.65rem 0.85rem;
   outline: none;
@@ -1149,7 +1149,7 @@ input:focus {
 }
 
 input::placeholder {
-  color: #374151;
+  color: var(--text-secondary);
 }
 
 .row {
@@ -1465,4 +1465,68 @@ a {
 .color-value {
   color: var(--text-primary);
   margin-left:10px;
+}
+
+.newthread-container {
+ /*min-height: 100vh;*/
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ width:100%;
+}
+
+.newthread-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px 24px;
+  box-shadow: var(--shadow);
+}
+
+.newthread-box-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.newthread-textarea {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  padding: 12px 14px;
+  resize: vertical;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+
+.newthread-input {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  padding: 12px 14px;
+  resize: vertical;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+
+.newthread-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.newthread-box-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
 }

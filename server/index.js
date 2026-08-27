@@ -329,6 +329,27 @@ app.post('/api/topics', async (req, res) => {
 //  res.json({ id: info.lastInsertRowid });
 //});
 
+app.post('/api/newthread', async (req, res) => {
+
+  const { threadtitle, threadbody, threadauthor, threadtopic } = req.body;
+  const gettopicid = db.prepare('SELECT id FROM topics WHERE name = ?').get(threadtopic);
+
+  //console.log(threadtitle, threadbody, threadauthor, threadtopic);
+
+  if ( !gettopicid ) {
+     return res.status(401).json({ error: 'ERROR: Invalid Topic' });
+  } else {
+     //console.log(gettopicid.id);
+     const getthreadid = db.prepare('SELECT id, topic_id, user_id, title, body FROM threads WHERE title = ?').get(threadtitle);
+     if( !getthreadid ) {
+         db.prepare('INSERT INTO threads (topic_id, user_id, title, body) VALUES (?, ?, ?, ?)').run(gettopicid.id, threadauthor, threadtitle, threadbody);
+     } else {
+         return res.status(401).json({ error: 'ERROR: Thread Already Exists' });
+     }
+  }
+
+});
+
 // --- Posts (replies) ---
 //app.get('/api/threads/:id/posts', (req, res) => {
 //  const rows = db.prepare(`

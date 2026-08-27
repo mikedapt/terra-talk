@@ -9,6 +9,7 @@ import ForgotPassword from './components/ForgotPassword'
 import PasswordReset from './components/PasswordReset'
 import TermsOfService from './components/TermsOfService'
 import CategoryView from './components/CategoryView'
+import CreateNewThread from './components/CreateNewThread'
 import ThreadView from './components/ThreadView'
 import Footer from './components/Footer'
 import './styles.css'
@@ -35,6 +36,7 @@ export default function App() {
       {view.page === 'reset' && <PasswordReset onNavigate={navigate} />}
       {view.page === 'terms' && <TermsOfService onNavigate={navigate} />}
       {view.page === 'category' && <CategoryView category={view.category} onNavigate={navigate} />}
+      {view.page === 'newthread' && <CreateNewThread category={view.category} onNavigate={navigate} />}
       {view.page === 'thread' && <ThreadView thread={view.thread} category={view.category} onNavigate={navigate} />}
 
       <Footer onNavigate={navigate} />

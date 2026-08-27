@@ -6,6 +6,8 @@ export default function CategoryView({ category, onNavigate }) {
   const pinnedThreads = category.threads.filter((t) => t.pinned)
   const normalThreads = category.threads.filter((t) => !t.pinned)
 
+  const currcategory = category.name
+
   const { user } = useAuth();
 
   //const [topics, setTopics] = useState([]);
@@ -39,7 +41,7 @@ export default function CategoryView({ category, onNavigate }) {
       </div>
 
       <div className="thread-list-header">
-        <button className="btn-new-thread">+ New Thread</button>
+        <button className="btn-new-thread" onClick={() => onNavigate('newthread', { category })}>+ New Thread</button>
       </div>
 
       <div className="thread-table">
