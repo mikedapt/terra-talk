@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react'
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
 
-export default function CreateNewThread({ category, onNavigate }) {
+export default function CreateNewThread({ topic, onNavigate }) {
 
   const { user } = useAuth();
 
-  const [form, setForm] = useState({ threadtitle: "", threadbody: "", threadauthor: user.id, threadtopic: category.name});
+  const [form, setForm] = useState({ threadtitle: "", threadbody: "", threadauthor: user.id, threadtopic: topic.name});
   const [status, setStatus] = useState("");
 
   const handleChange = (e) => {
@@ -29,6 +29,7 @@ export default function CreateNewThread({ category, onNavigate }) {
          return;
       }
       setStatus("New Thread Created");
+      window.location.reload()
 
     } catch {
       setStatus("Network error");
@@ -41,7 +42,7 @@ export default function CreateNewThread({ category, onNavigate }) {
             <div className="breadcrumb">
               <button className="breadcrumb-link" onClick={() => onNavigate('home')}>Home</button>
               <span className="breadcrumb-sep">›</span>
-              <span className="breadcrumb-link" onClick={() => onNavigate('category', { category })}>{category.name}</span>
+              <span className="breadcrumb-link" onClick={() => onNavigate('category', { topic })}>{topic.name}</span>
               <span className="breadcrumb-sep">›</span>
               <span className="breadcrumb-current">{form.title}</span>
             </div>

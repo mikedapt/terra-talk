@@ -288,6 +288,12 @@ app.post('/api/categories', async (req, res) => {
 //  res.json(rows);
 //});
 
+
+app.get('/api/topics', (req, res) => {
+  const rows = db.prepare(`SELECT id, category_id, name, icon, title, description, accentColor FROM topics ORDER BY name`).all();
+  res.json(rows);
+});
+
 app.post('/api/topics', async (req, res) => {
   const { topname, topdesc, topcat, topicon, topcolor, topauthor } = req.body;
   console.log(topname, topdesc, topcat, topicon, topcolor, topauthor);
@@ -329,6 +335,11 @@ app.post('/api/topics', async (req, res) => {
 //  res.json({ id: info.lastInsertRowid });
 //});
 
+app.get('/api/threads', (req, res) => {
+  const rows = db.prepare(`SELECT id, topic_id, user_id, title, body, created_at, is_pinned FROM threads ORDER BY title`).all();
+  res.json(rows);
+});
+
 app.post('/api/newthread', async (req, res) => {
 
   const { threadtitle, threadbody, threadauthor, threadtopic } = req.body;
@@ -339,10 +350,10 @@ app.post('/api/newthread', async (req, res) => {
   if ( !gettopicid ) {
      return res.status(401).json({ error: 'ERROR: Invalid Topic' });
   } else {
-     //console.log(gettopicid.id);
-     const getthreadid = db.prepare('SELECT id, topic_id, user_id, title, body FROM threads WHERE title = ?').get(threadtitle);
+     // console.log(gettopicid.id);
+     const getthreadid = db.prepare('SELECT id, topic_id, user_id, title, body FROM threads WHERE title = ? AND topic_id = ?').get(threadtitle,gettopicid);
      if( !getthreadid ) {
-         db.prepare('INSERT INTO threads (topic_id, user_id, title, body) VALUES (?, ?, ?, ?)').run(gettopicid.id, threadauthor, threadtitle, threadbody);
+     db.prepare('INSERT INTO threads (topic_id, user_id, title, body) VALUES (?, ?, ?, ?)').run(gettopicid.id, threadauthor, threadtitle, threadbody);
      } else {
          return res.status(401).json({ error: 'ERROR: Thread Already Exists' });
      }

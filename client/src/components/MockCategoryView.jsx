@@ -2,36 +2,17 @@ import { useState, useEffect } from 'react'
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
 
+export default function CategoryView({ category, onNavigate }) {
+  const pinnedThreads = category.threads.filter((t) => t.pinned)
+  const normalThreads = category.threads.filter((t) => !t.pinned)
 
-
-export default function CategoryView({ topic, onNavigate }) {
-
-  const currcategory = topic.name
+  const currcategory = category.name
 
   const { user } = useAuth();
 
-  const [threads, setThreads] = useState([]);
+  //const [topics, setTopics] = useState([]);
   //const [loading, setLoading] = useState(true);
   //const [error, setError] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const res = await fetch("http://localhost:3001/api/threads");
-        const data = await res.json();
-        if (!cancelled) setThreads(Array.isArray(data) ? data : []);
-      } catch {
-        if (!cancelled) setStatus("Could not load topics");
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, []);
-
-  const pinnedThreads = threads.filter((t) => t.is_pinned)
-  const normalThreads = threads.filter((t) => !t.is_pinned)
 
   //useEffect(() => {
     //api('/topics')
@@ -48,19 +29,19 @@ export default function CategoryView({ topic, onNavigate }) {
       <div className="breadcrumb">
         <button className="breadcrumb-link" onClick={() => onNavigate('home')}>Home</button>
         <span className="breadcrumb-sep">›</span>
-        <span className="breadcrumb-current">{topic.name}</span>
+        <span className="breadcrumb-current">{category.name}</span>
       </div>
 
-      <div className="category-page-header" style={{ borderLeft: `4px solid ${topic.accentColor}` }}>
-        <span className="category-page-icon">{topic.icon}</span>
+      <div className="category-page-header" style={{ borderLeft: `4px solid ${category.accentColor}` }}>
+        <span className="category-page-icon">{category.icon}</span>
         <div>
-          <h1 className="category-page-title">{topic.name}</h1>
-          <p className="category-page-desc">{topic.description}</p>
+          <h1 className="category-page-title">{category.name}</h1>
+          <p className="category-page-desc">{category.description}</p>
         </div>
       </div>
 
       <div className="thread-list-header">
-        <button className="btn-new-thread" onClick={() => onNavigate('newthread', { topic })}>+ New Thread</button>
+        <button className="btn-new-thread" onClick={() => onNavigate('newthread', { category })}>+ New Thread</button>
       </div>
 
       <div className="thread-table">
@@ -76,14 +57,14 @@ export default function CategoryView({ topic, onNavigate }) {
             key={thread.id}
             thread={thread}
             pinned
-            onClick={() => onNavigate('thread', { thread, topic })}
+            onClick={() => onNavigate('thread', { thread, category })}
           />
         ))}
         {normalThreads.map((thread) => (
           <ThreadRow
             key={thread.id}
             thread={thread}
-            onClick={() => onNavigate('thread', { thread, topic })}
+            onClick={() => onNavigate('thread', { thread, category })}
           />
         ))}
 

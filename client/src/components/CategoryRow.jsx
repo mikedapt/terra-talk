@@ -1,32 +1,35 @@
-export default function CategoryRow({ category, onClick }) {
+export default function CategoryRow({ topic, onClick }) {
+
+  //lastPost
+
   return (
     <div className="category-row" onClick={onClick} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onClick()}>
-      <div className="category-icon-wrap" style={{ background: category.accentColor + '22', borderLeft: `4px solid ${category.accentColor}` }}>
-        <span className="category-icon">{category.icon}</span>
+      <div className="category-icon-wrap" style={{ background: topic.accentColor + '22', borderLeft: `4px solid ${topic.accentColor}` }}>
+        <span className="category-icon">{topic.icon}</span>
       </div>
       <div className="category-info">
-        <div className="category-name">{category.name}</div>
-        <div className="category-desc">{category.description}</div>
+        <div className="category-name">{topic.name}</div>
+        <div className="category-desc">{topic.description}</div>
       </div>
       <div className="category-stats">
         <div className="stat-item">
-          <span className="stat-num">{category.threadCount.toLocaleString()}</span>
+          <span className="stat-num">0</span>
           <span className="stat-lbl">Threads</span>
         </div>
         <div className="stat-item">
-          <span className="stat-num">{category.postCount.toLocaleString()}</span>
+          <span className="stat-num">0</span>
           <span className="stat-lbl">Posts</span>
         </div>
       </div>
       <div className="category-last-post">
-        {category.lastPost ? (
+        {topic ? (
           <>
-            <div className="last-post-title" title={category.lastPost.title}>
-              {category.lastPost.title}
+            <div className="last-post-title" title="lastPost">
+              Enter Last Post Here
             </div>
             <div className="last-post-meta">
-              by <span className="last-post-author">{category.lastPost.author}</span>
-              <span className="last-post-time"> · {category.lastPost.time}</span>
+              by <span className="last-post-author">Last Post Author Here</span>
+              <span className="last-post-time"> · Last Post Time Here</span>
             </div>
           </>
         ) : (

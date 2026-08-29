@@ -59,17 +59,17 @@ export default function ForumHome({ onNavigate }) {
     <div className="page-content">
       <div className="forum-layout">
         <div className="forum-main">
-          {categories.map((section) => (
+          {forumSections.map((section) => (
             <div key={section.id} className="forum-section">
               <div className="section-header">
                 <h2 className="section-title">{section.name}</h2>
               </div>
               <div className="category-list">
-                {topics.map((topic) => (
+                {section.categories.map((category) => (
                   <CategoryRow
-                    key={topic.id}
-                    topic={topic}
-                    onClick={() => onNavigate('topic', { topic })}
+                    key={category.id}
+                    category={category}
+                    onClick={() => onNavigate('category', { category })}
                   />
                 ))}
               </div>
@@ -81,13 +81,13 @@ export default function ForumHome({ onNavigate }) {
           <div className="sidebar-card">
             <h3 className="sidebar-card-title">Forum Statistics</h3>
             <ul className="stats-list">
-              <li><span className="stat-label">Threads</span><span className="stat-value">0</span></li>
-              <li><span className="stat-label">Posts</span><span className="stat-value">0</span></li>
-              <li><span className="stat-label">Members</span><span className="stat-value">0</span></li>
-              <li><span className="stat-label">Online Now</span><span className="stat-value online">0</span></li>
+              <li><span className="stat-label">Threads</span><span className="stat-value">{forumStats.totalThreads.toLocaleString()}</span></li>
+              <li><span className="stat-label">Posts</span><span className="stat-value">{forumStats.totalPosts.toLocaleString()}</span></li>
+              <li><span className="stat-label">Members</span><span className="stat-value">{forumStats.totalMembers.toLocaleString()}</span></li>
+              <li><span className="stat-label">Online Now</span><span className="stat-value online">{forumStats.onlineNow}</span></li>
             </ul>
             <div className="newest-member">
-              Newest: <span className="member-link">ReginaldTheBrawn</span>
+              Newest: <span className="member-link">{forumStats.newestMember}</span>
             </div>
           </div>
 
