@@ -245,7 +245,7 @@ app.post('/api/login', async (req, res) => {
 });**/
 
 app.get('/api/categories', (req, res) => {
-  const rows = db.prepare(`SELECT id, name, description FROM categories ORDER BY name`).all();
+  const rows = db.prepare(`SELECT id, name, description FROM categories ORDER BY id`).all();
   res.json(rows);
 });
 
@@ -336,7 +336,14 @@ app.post('/api/topics', async (req, res) => {
 //});
 
 app.get('/api/threads', (req, res) => {
-  const rows = db.prepare(`SELECT id, topic_id, user_id, title, body, created_at, is_pinned FROM threads ORDER BY title`).all();
+  //const rows = db.prepare(`SELECT id, topic_id, user_id, title, body, created_at, is_pinned FROM threads ORDER BY title`).all();
+  const rows = db.prepare(`
+    SELECT t.id, t.topic_id, t.title, t.body, t.created_at, t.is_pinned,
+           u.id AS user_id, u.username, u.profile_path
+    FROM threads t
+    JOIN users u ON u.id = t.user_id
+    ORDER BY t.title
+  `).all();
   res.json(rows);
 });
 

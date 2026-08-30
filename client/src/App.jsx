@@ -35,7 +35,7 @@ export default function App() {
       {view.page === 'forgotpwd' && <ForgotPassword onNavigate={navigate} />}
       {view.page === 'reset' && <PasswordReset onNavigate={navigate} />}
       {view.page === 'terms' && <TermsOfService onNavigate={navigate} />}
-      {view.page === 'category' && <CategoryView category={view.category} onNavigate={navigate} />}
+      {view.page === 'topic' && <CategoryView topic={view.topic} onNavigate={navigate} />}
       {view.page === 'newthread' && <CreateNewThread category={view.category} onNavigate={navigate} />}
       {view.page === 'thread' && <ThreadView thread={view.thread} category={view.category} onNavigate={navigate} />}
 

@@ -27,7 +27,9 @@ export default function ForumHome({ onNavigate }) {
         const data = await res.json();
         if (!cancelled) setCategories(Array.isArray(data) ? data : []);
       } catch {
-        if (!cancelled) setStatus("Could not load categories");
+        if (!cancelled) setError("Could not load categories");
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
 
@@ -45,6 +47,8 @@ export default function ForumHome({ onNavigate }) {
         if (!cancelled) setTopics(Array.isArray(data) ? data : []);
       } catch {
         if (!cancelled) setStatus("Could not load topics");
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
 
@@ -52,29 +56,35 @@ export default function ForumHome({ onNavigate }) {
   }, []);
 
 
-  //if (loading) return <p>Loading categories...</p>;
-  //if (error) return <p>Error: {error}</p>;
+  if (loading) return <p>Loading categories...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <div className="page-content">
       <div className="forum-layout">
         <div className="forum-main">
-          {categories.map((section) => (
-            <div key={section.id} className="forum-section">
-              <div className="section-header">
-                <h2 className="section-title">{section.name}</h2>
+          {categories.map((section) => {
+            const sectionTopics = topics.filter(
+              (topic) => topic.category_id === section.id
+            );
+
+            return (
+              <div key={section.id} className="forum-section">
+                <div className="section-header">
+                  <h2 className="section-title">{section.name}</h2>
+                </div>
+                <div className="category-list">
+                  {sectionTopics.map((topic) => (
+                    <CategoryRow
+                      key={topic.id}
+                      topic={topic}
+                      onClick={() => onNavigate('topic', { topic })}
+                    />
+                  ))}
+                </div>
               </div>
-              <div className="category-list">
-                {topics.map((topic) => (
-                  <CategoryRow
-                    key={topic.id}
-                    topic={topic}
-                    onClick={() => onNavigate('topic', { topic })}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <aside className="forum-sidebar">
@@ -121,5 +131,7 @@ export default function ForumHome({ onNavigate }) {
         </aside>
       </div>
     </div>
-  )
+  );
+
+
 }

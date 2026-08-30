@@ -11,8 +11,8 @@ export default function CategoryView({ topic, onNavigate }) {
   const { user } = useAuth();
 
   const [threads, setThreads] = useState([]);
-  //const [loading, setLoading] = useState(true);
-  //const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -23,15 +23,19 @@ export default function CategoryView({ topic, onNavigate }) {
         const data = await res.json();
         if (!cancelled) setThreads(Array.isArray(data) ? data : []);
       } catch {
-        if (!cancelled) setStatus("Could not load topics");
+        if (!cancelled) setStatus("Could not load threads");
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
 
     return () => { cancelled = true; };
   }, []);
 
-  const pinnedThreads = threads.filter((t) => t.is_pinned)
-  const normalThreads = threads.filter((t) => !t.is_pinned)
+  const topicThreads = threads.filter((t) => t.topic_id === topic.id);
+
+  const pinnedThreads = topicThreads.filter((t) => t.is_pinned)
+  const normalThreads = topicThreads.filter((t) => !t.is_pinned)
 
   //useEffect(() => {
     //api('/topics')
@@ -87,7 +91,7 @@ export default function CategoryView({ topic, onNavigate }) {
           />
         ))}
 
-        {category.threads.length === 0 && (
+        {normalThreads.length === 0 && pinnedThreads.length === 0 && (
           <div className="empty-state">No threads yet. Be the first to post!</div>
         )}
       </div>
@@ -99,15 +103,15 @@ function ThreadRow({ thread, pinned, onClick }) {
   return (
     <div className={`thread-row ${pinned ? 'thread-pinned' : ''}`} onClick={onClick} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onClick()}>
       <div className="thread-col-main">
-        <div className="thread-avatar">{thread.avatar}</div>
+        <div className="thread-avatar"><img src={`http://localhost:3001/profiles/${thread.profile_path}`}></img></div>
         <div className="thread-info">
           <div className="thread-title-row">
             {pinned && <span className="pin-badge">📌 Pinned</span>}
             <span className="thread-title">{thread.title}</span>
           </div>
           <div className="thread-meta">
-            by <span className="thread-author">{thread.author}</span>
-            <span className="thread-time"> · {thread.time}</span>
+            by <span className="thread-author">{thread.username}</span>
+            <span className="thread-time"> · {thread.created_at}</span>
           </div>
         </div>
       </div>
@@ -115,11 +119,11 @@ function ThreadRow({ thread, pinned, onClick }) {
         <span className="thread-stat-num">{thread.replies}</span>
       </div>
       <div className="thread-col-stats">
-        <span className="thread-stat-num">{thread.views.toLocaleString()}</span>
+        <span className="thread-stat-num">[insert thread views here]</span>
       </div>
       <div className="thread-col-last">
-        <div className="last-post-author">{thread.author}</div>
-        <div className="last-post-time">{thread.time}</div>
+        <div className="last-post-author">{thread.username}</div>
+        <div className="last-post-time">{thread.created_at}</div>
       </div>
     </div>
   )
