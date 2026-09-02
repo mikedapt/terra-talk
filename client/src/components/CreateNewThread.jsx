@@ -42,7 +42,7 @@ export default function CreateNewThread({ topic, onNavigate }) {
             <div className="breadcrumb">
               <button className="breadcrumb-link" onClick={() => onNavigate('home')}>Home</button>
               <span className="breadcrumb-sep">›</span>
-              <span className="breadcrumb-link" onClick={() => onNavigate('category', { topic })}>{topic.name}</span>
+              <span className="breadcrumb-link" onClick={() => onNavigate('topic', { topic })}>{topic.name}</span>
               <span className="breadcrumb-sep">›</span>
               <span className="breadcrumb-current">{form.title}</span>
             </div>

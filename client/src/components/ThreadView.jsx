@@ -1,10 +1,10 @@
-export default function ThreadView({ thread, category, onNavigate }) {
+export default function ThreadView({ thread, topic, onNavigate }) {
   return (
     <div className="page-content">
       <div className="breadcrumb">
         <button className="breadcrumb-link" onClick={() => onNavigate('home')}>Home</button>
         <span className="breadcrumb-sep">›</span>
-        <button className="breadcrumb-link" onClick={() => onNavigate('category', { category })}>{category.name}</button>
+        <button className="breadcrumb-link" onClick={() => onNavigate('topic', { topic })}>{topic.name}</button>
         <span className="breadcrumb-sep">›</span>
         <span className="breadcrumb-current">{thread.title}</span>
       </div>
@@ -15,29 +15,28 @@ export default function ThreadView({ thread, category, onNavigate }) {
           {thread.pinned && <span className="pin-badge">📌 Pinned</span>}
           <span>{thread.replies} replies</span>
           <span>·</span>
-          <span>{thread.views.toLocaleString()} views</span>
+          <span>[thread views here]</span>
         </div>
       </div>
 
       <div className="posts-list">
-        {thread.posts.map((post, idx) => (
-          <div key={post.id} className={`post-card ${idx === 0 ? 'post-op' : ''}`}>
+          <div key={thread.id} className={`post-card ${thread.id === 0 ? 'post-op' : ''}`}>
             <div className="post-sidebar">
-              <div className="post-avatar">{post.avatar}</div>
-              <div className="post-author-name">{post.author}</div>
+              <div className="post-avatar">A</div>
+              <div className="post-author-name">{thread.username}</div>
               <div className="post-author-role">
-                {post.author === 'Admin' ? <span className="role-badge admin">Admin</span>
-                  : post.author.startsWith('Moderator') ? <span className="role-badge mod">Mod</span>
+                {thread.username === 'admin' ? <span className="role-badge admin">Admin</span>
+                  : thread.username.startsWith('moderator') ? <span className="role-badge mod">Mod</span>
                   : <span className="role-badge member">Member</span>}
               </div>
             </div>
             <div className="post-content">
               <div className="post-header">
-                <span className="post-time">{post.time}</span>
-                <span className="post-num">#{idx + 1}</span>
+                <span className="post-time">{thread.created_at}</span>
+                <span className="post-num">#1</span>
               </div>
               <div className="post-body">
-                {post.body.split('\n').map((line, i) => (
+                {thread.body.split('\n').map((line, i) => (
                   <p key={i}>{line || <br />}</p>
                 ))}
               </div>
@@ -48,7 +47,6 @@ export default function ThreadView({ thread, category, onNavigate }) {
               </div>
             </div>
           </div>
-        ))}
       </div>
 
       <div className="reply-box">
