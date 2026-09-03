@@ -369,6 +369,37 @@ app.post('/api/newthread', async (req, res) => {
 });
 
 // --- Posts (replies) ---
+
+
+app.get('/api/posts', (req, res) => {
+   
+  const rows = db.prepare(`
+    SELECT p.id, p.thread_id, p.body, p.created_at,
+           u.id AS user_id, u.username, u.profile_path
+    FROM posts p
+    JOIN users u ON u.id = p.user_id
+    ORDER BY p.created_at
+  `).all();
+  res.json(rows);
+});
+
+app.post('/api/newpost', async (req, res) => {
+
+  const { postbody, postauthor, postthread } = req.body;
+  const getthreadid = db.prepare('SELECT id FROM threads WHERE id = ?').get(postthread);
+
+  //console.log(threadtitle, threadbody, threadauthor, threadtopic);
+
+  if ( !getthreadid ) {
+     return res.status(401).json({ error: 'ERROR: Invalid Thread' });
+  } else {
+     // console.log(gettopicid.id);
+     db.prepare('INSERT INTO posts (thread_id, user_id, body) VALUES (?, ?, ?)').run(getthreadid.id, postauthor, postbody);
+
+  }
+
+});
+
 //app.get('/api/threads/:id/posts', (req, res) => {
 //  const rows = db.prepare(`
 //    SELECT p.*, u.username
