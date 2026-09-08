@@ -394,7 +394,8 @@ app.post('/api/newpost', async (req, res) => {
      return res.status(401).json({ error: 'ERROR: Invalid Thread' });
   } else {
      // console.log(gettopicid.id);
-     db.prepare('INSERT INTO posts (thread_id, user_id, body) VALUES (?, ?, ?)').run(getthreadid.id, postauthor, postbody);
+     const rows = db.prepare('INSERT INTO posts (thread_id, user_id, body) VALUES (?, ?, ?)').run(getthreadid.id, postauthor, postbody);
+     res.status(201).json(rows);
 
   }
 

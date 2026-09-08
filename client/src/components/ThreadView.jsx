@@ -9,25 +9,22 @@ export default function ThreadView({ thread, topic, onNavigate }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [status, setStatus] = useState(null);
 
+
+  const loadPosts = async () => {
+    const res = await fetch("http://localhost:3001/api/posts");
+    if (!res.ok) throw new Error(`GET /api/posts failed (${res.status})`);
+    const data = await res.json();
+    setPosts(Array.isArray(data) ? data : []);
+  };
 
   useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const res = await fetch("http://localhost:3001/api/posts");
-        const data = await res.json();
-        if (!cancelled) setPosts(Array.isArray(data) ? data : []);
-      } catch {
-        if (!cancelled) setStatus("Could not load posts");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
+    loadPosts()
+      .catch(() => setStatus("Could not load posts"))
+      .finally(() => setLoading(false));
   }, []);
+
 
   const threadPosts = posts.filter((p) => p.thread_id === thread.id);
 
@@ -43,20 +40,35 @@ export default function ThreadView({ thread, topic, onNavigate }) {
       const res = await fetch("http://localhost:3001/api/newpost", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ postbody: form.postbody, postauthor: user.id, postthread: thread.id }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-         setStatus(data.error || "Something went wrong");
-         return;
-      }
-      setStatus("New Post Created");
-      window.location.reload()
 
-    } catch {
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+
+      if (!res.ok) {
+        setStatus(data.error || `Request failed (${res.status})`);
+        return;
+      }
+
+      setStatus("New Post Created");
+      setForm((f) => ({ ...f, postbody: "" }));
+    } catch (err) {
+      console.error("submit failed:", err);
       setStatus("Network error");
+      return;
+    }
+
+    try {
+      await loadPosts();
+    } catch (err) {
+      console.error("reload failed:", err);
+      setStatus("Posted, but couldn't refresh the list");
     }
   };
+
+  if (loading) return <p>Loading posts...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <div className="page-content">
@@ -152,6 +164,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
             <button type="submit" className="btn-submit-reply">Post Reply</button>
           </div>
         </form>
+        {status && <p className="reply-status">{status}</p>}
       </div>
     </div>
   )

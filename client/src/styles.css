@@ -920,6 +920,10 @@ button { cursor: pointer; font-family: inherit; }
   margin-top: 12px;
 }
 
+.reply-status {
+  color: var(--text-secondary);
+}
+
 .btn-submit-reply {
   background: var(--accent);
   color: #fff;
