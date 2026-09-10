@@ -94,6 +94,10 @@ export default function TermsOfService({ onNavigate }) {
   const [colorStatus, setColorStatus] = useState('');
   const [activeThemeTab, setActiveThemeTab] = useState('light');
 
+  const [headerTitle, setHeaderTitle] = useState(() => localStorage.getItem('siteTitle') || 'TerraTalk');
+  const [headerTagline, setHeaderTagline] = useState(() => localStorage.getItem('siteTagline') || 'Your world. Your voice.');
+  const [headerStatus, setHeaderStatus] = useState('');
+
   const capitalize = str => str[0].toUpperCase() + str.slice(1);
 
 
@@ -254,6 +258,24 @@ export default function TermsOfService({ onNavigate }) {
     setTimeout(() => setColorStatus(''), 3000);
   };
 
+  const handleSaveHeaderSettings = () => {
+    localStorage.setItem('siteTitle', headerTitle);
+    localStorage.setItem('siteTagline', headerTagline);
+    window.dispatchEvent(new Event('siteSettingsChanged'));
+    setHeaderStatus('Header settings saved!');
+    setTimeout(() => setHeaderStatus(''), 3000);
+  };
+
+  const handleResetHeaderSettings = () => {
+    setHeaderTitle('TerraTalk');
+    setHeaderTagline('Your world. Your voice.');
+    localStorage.removeItem('siteTitle');
+    localStorage.removeItem('siteTagline');
+    window.dispatchEvent(new Event('siteSettingsChanged'));
+    setHeaderStatus('Header settings reset to defaults!');
+    setTimeout(() => setHeaderStatus(''), 3000);
+  };
+
 
   if (user.username == 'admin') {
 
@@ -276,11 +298,51 @@ export default function TermsOfService({ onNavigate }) {
                         <hr></hr>
                         <br></br>
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <button type="button" className="tag-btn" onClick={() => document.getElementById('section-header').scrollIntoView({ behavior: 'smooth' })}>Header Settings</button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-categories').scrollIntoView({ behavior: 'smooth' })}>Categories &amp; Topics</button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-ban').scrollIntoView({ behavior: 'smooth' })}>Ban Users</button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-theme').scrollIntoView({ behavior: 'smooth' })}>Theme Colors</button>
                         </div>
                         <br></br>
+                    </div>
+                  </div>
+
+                  <div id="section-header" className="admin-card">
+                    <div className="admin-content">
+                        <h2><b> Header Settings </b></h2>
+                        <br></br>
+                        <p> Customize the site title and tagline shown in the header. Changes are applied immediately and saved across sessions. </p>
+                        <br></br>
+                        <hr></hr>
+                        <br></br>
+
+                        <div className="form-group">
+                          <label htmlFor="siteTitle">Site Title</label>
+                          <input
+                            type="text"
+                            id="siteTitle"
+                            value={headerTitle}
+                            onChange={e => setHeaderTitle(e.target.value)}
+                            placeholder="TerraTalk"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="siteTagline">Site Tagline</label>
+                          <input
+                            type="text"
+                            id="siteTagline"
+                            value={headerTagline}
+                            onChange={e => setHeaderTagline(e.target.value)}
+                            placeholder="Your world. Your voice."
+                          />
+                        </div>
+
+                        <button type="button" className="btn" onClick={handleSaveHeaderSettings}>Save Header Settings</button>
+                        <br></br>
+                        <br></br>
+                        <button type="button" className="btn" onClick={handleResetHeaderSettings}>Restore Defaults</button>
+                        {headerStatus && <p className="form-status">{headerStatus}</p>}
                     </div>
                   </div>
 
@@ -490,6 +552,7 @@ export default function TermsOfService({ onNavigate }) {
                         {colorStatus && <p className="form-status">{colorStatus}</p>}
                     </div>
                   </div>
+
 
             </div>
       )

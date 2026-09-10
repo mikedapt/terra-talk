@@ -17,6 +17,18 @@ export default function Header({ darkMode, toggleDark, onNavigate }) {
 
   const { user,  logout } = useAuth();
 
+  const [siteTitle, setSiteTitle] = useState(() => localStorage.getItem('siteTitle') || 'TerraTalk');
+  const [siteTagline, setSiteTagline] = useState(() => localStorage.getItem('siteTagline') || 'Your world. Your voice.');
+
+  useEffect(() => {
+    const handler = () => {
+      setSiteTitle(localStorage.getItem('siteTitle') || 'TerraTalk');
+      setSiteTagline(localStorage.getItem('siteTagline') || 'Your world. Your voice.');
+    };
+    window.addEventListener('siteSettingsChanged', handler);
+    return () => window.removeEventListener('siteSettingsChanged', handler);
+  }, []);
+
   function AdminMenu({username}) {
     if (username == 'admin') {
        return (
@@ -55,8 +67,8 @@ export default function Header({ darkMode, toggleDark, onNavigate }) {
             <span className="logo-placeholder-text">YOUR LOGO</span>
           </div>
           <div className="site-title" onClick={() => onNavigate('home')}>
-            <span className="site-name">TerraTalk</span>
-            <span className="site-tagline">Your world. Your voice.</span>
+            <span className="site-name">{siteTitle}</span>
+            <span className="site-tagline">{siteTagline}</span>
           </div>
         </div>
 
