@@ -103,14 +103,17 @@ app.get('/api/stats', (req, res) => {
 
 const PROFILE_DIR = path.join(__dirname, 'public', 'profiles');
 fs.mkdirSync(PROFILE_DIR, { recursive: true });
- 
+
+const LOGO_DIR = path.join(__dirname, 'public', 'logos');
+fs.mkdirSync(LOGO_DIR, { recursive: true });
+
 const ALLOWED_TYPES = {
   'image/jpeg': '.jpg',
   'image/png': '.png',
   'image/webp': '.webp',
   'image/gif': '.gif',
 };
- 
+
 const avatarUpload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => cb(null, PROFILE_DIR),
@@ -132,6 +135,21 @@ const avatarUpload = multer({
 
 
 
+
+const logoUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, LOGO_DIR),
+    filename: (req, file, cb) => {
+      const ext = ALLOWED_TYPES[file.mimetype] || '.png';
+      cb(null, `logo_${Date.now()}${ext}`);
+    },
+  }),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!ALLOWED_TYPES[file.mimetype]) return cb(new Error('Choose a JPEG, PNG, WebP, or GIF image.'));
+    cb(null, true);
+  },
+});
 
 // auth middleware
 function authRequired(req, res, next) {
@@ -182,6 +200,11 @@ app.post('/api/me/avatar', authRequired, avatarUpload.single('avatar'), (req, re
 
 
 
+
+app.post('/api/admin/logo', authRequired, adminRequired, logoUpload.single('logo'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No image was uploaded.' });
+  res.json({ logo_path: req.file.filename });
+});
 
 app.post('/api/register', async (req, res) => {
   const { username, email, password, confirm, agree } = req.body;

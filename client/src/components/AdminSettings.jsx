@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
 
@@ -97,6 +97,12 @@ export default function TermsOfService({ onNavigate }) {
   const [headerTitle, setHeaderTitle] = useState(() => localStorage.getItem('siteTitle') || 'TerraTalk');
   const [headerTagline, setHeaderTagline] = useState(() => localStorage.getItem('siteTagline') || 'Your world. Your voice.');
   const [headerStatus, setHeaderStatus] = useState('');
+
+  const logoFileInputRef = useRef(null);
+  const [currentLogoUrl, setCurrentLogoUrl] = useState(() => localStorage.getItem('siteLogoUrl') || null);
+  const [logoPreview, setLogoPreview] = useState(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoStatus, setLogoStatus] = useState(null);
 
   const capitalize = str => str[0].toUpperCase() + str.slice(1);
 
@@ -276,6 +282,53 @@ export default function TermsOfService({ onNavigate }) {
     setTimeout(() => setHeaderStatus(''), 3000);
   };
 
+  async function handleLogoFileChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const localUrl = URL.createObjectURL(file);
+    setLogoPreview(localUrl);
+    setLogoStatus(null);
+    setLogoUploading(true);
+
+    try {
+      const form = new FormData();
+      form.append('logo', file);
+
+      const res = await fetch('http://localhost:3001/api/admin/logo', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed. Try again.');
+
+      const logoUrl = `http://localhost:3001/logos/${data.logo_path}`;
+      localStorage.setItem('siteLogoUrl', logoUrl);
+      window.dispatchEvent(new Event('siteSettingsChanged'));
+      setCurrentLogoUrl(logoUrl);
+      setLogoPreview(null);
+      URL.revokeObjectURL(localUrl);
+      setLogoStatus({ type: 'ok', text: 'Logo updated.' });
+    } catch (err) {
+      setLogoPreview(null);
+      URL.revokeObjectURL(localUrl);
+      setLogoStatus({ type: 'error', text: err.message });
+    } finally {
+      setLogoUploading(false);
+      e.target.value = '';
+    }
+  }
+
+  const handleRemoveLogo = () => {
+    localStorage.removeItem('siteLogoUrl');
+    window.dispatchEvent(new Event('siteSettingsChanged'));
+    setCurrentLogoUrl(null);
+    setLogoPreview(null);
+    setLogoStatus({ type: 'ok', text: 'Logo removed.' });
+  };
+
 
   if (user.username == 'admin') {
 
@@ -343,6 +396,57 @@ export default function TermsOfService({ onNavigate }) {
                         <br></br>
                         <button type="button" className="btn" onClick={handleResetHeaderSettings}>Restore Defaults</button>
                         {headerStatus && <p className="form-status">{headerStatus}</p>}
+
+                        <br></br>
+                        <hr></hr>
+                        <br></br>
+
+                        <p><b>Site Logo</b></p>
+                        <br></br>
+                        <p>Upload an image to replace the "YOUR LOGO" placeholder in the header.</p>
+                        <br></br>
+
+                        {(logoPreview || currentLogoUrl) && (
+                          <div style={{ marginBottom: '1rem' }}>
+                            <img
+                              src={logoPreview || currentLogoUrl}
+                              alt="Current site logo"
+                              style={{ maxHeight: '80px', maxWidth: '200px', objectFit: 'contain' }}
+                            />
+                          </div>
+                        )}
+
+                        <input
+                          type="file"
+                          ref={logoFileInputRef}
+                          accept="image/png, image/jpeg, image/webp, image/gif"
+                          onChange={handleLogoFileChange}
+                          style={{ display: 'none' }}
+                        />
+
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                          <button
+                            type="button"
+                            className="btn"
+                            onClick={() => logoFileInputRef.current?.click()}
+                            disabled={logoUploading}
+                          >
+                            {logoUploading ? 'Uploading…' : 'Upload Logo'}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn"
+                            onClick={handleRemoveLogo}
+                            disabled={logoUploading || !currentLogoUrl}
+                          >
+                            Remove Logo
+                          </button>
+                        </div>
+                        {logoStatus && (
+                          <p className="form-status" style={{ color: logoStatus.type === 'error' ? '#c0392b' : undefined }}>
+                            {logoStatus.text}
+                          </p>
+                        )}
                     </div>
                   </div>
 
