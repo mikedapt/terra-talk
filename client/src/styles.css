@@ -1082,7 +1082,7 @@ button { cursor: pointer; font-family: inherit; }
   width: 100%;
   max-width: 1200px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  margin-top:10px;
+  margin-top:20px;
 }
 
 .admin-header {
@@ -1212,6 +1212,28 @@ input::placeholder {
 }
 
 .btn:active {
+  transform: scale(0.98);
+}
+
+.tag-btn {
+  width: 20%;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 5px;
+  padding: 0.75rem;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.tag-btn:hover {
+  background: var(--accent-hover);
+}
+
+.tag-btn:active {
   transform: scale(0.98);
 }
 

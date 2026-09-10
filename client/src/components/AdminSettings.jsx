@@ -2,6 +2,82 @@ import { useState, useEffect } from 'react'
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
 
+const COLOR_VARS = {
+  'Backgrounds': [
+    { var: '--bg-base',        label: 'Page Background',   light: '#dfded9', dark: '#111214' },
+    { var: '--bg-surface',     label: 'Surface / Cards',   light: '#ffffff', dark: '#1c1e21' },
+    { var: '--bg-header',      label: 'Header',            light: '#1e4d1a', dark: '#0f2b0c' },
+    { var: '--bg-header-mid',  label: 'Header Mid',        light: '#2a6122', dark: '#163a12' },
+    { var: '--bg-section-hd',  label: 'Section Header',    light: '#2d5e27', dark: '#1a3d16' },
+    { var: '--bg-hover',       label: 'Hover State',       light: '#f7f8fa', dark: '#242628' },
+    { var: '--bg-sidebar',     label: 'Sidebar',           light: '#ffffff', dark: '#1c1e21' },
+    { var: '--bg-input',       label: 'Input Background',  light: '#ffffff', dark: '#242628' },
+    { var: '--bg-post-op',     label: 'OP Post Highlight', light: '#f0f7ee', dark: '#1a2e18' },
+    { var: '--policy-card-bg', label: 'Policy Card',       light: '#f0f2f5', dark: '#272727' },
+  ],
+  'Text': [
+    { var: '--text-primary',   label: 'Primary Text',      light: '#1a1a1a', dark: '#e4e6eb' },
+    { var: '--text-secondary', label: 'Secondary Text',    light: '#555555', dark: '#b0b3b8' },
+    { var: '--text-muted',     label: 'Muted Text',        light: '#888888', dark: '#6e7176' },
+    { var: '--text-header',    label: 'Header Text',       light: '#ffffff', dark: '#e4e6eb' },
+  ],
+  'Borders': [
+    { var: '--border',         label: 'Border',            light: '#e2e5ea', dark: '#2d3035' },
+    { var: '--border-light',   label: 'Light Border',      light: '#eef0f3', dark: '#242628' },
+  ],
+  'Accent': [
+    { var: '--accent',         label: 'Accent',            light: '#3d8c35', dark: '#5cb85c' },
+    { var: '--accent-hover',   label: 'Accent Hover',      light: '#2e6e28', dark: '#4cae4c' },
+    { var: '--accent-light',   label: 'Accent Light',      light: '#e8f5e3', dark: '#1a3018' },
+  ],
+  'Pins': [
+    { var: '--pin-bg',         label: 'Pin Background',    light: '#fffbea', dark: '#2a2510' },
+    { var: '--pin-border',     label: 'Pin Border',        light: '#f5e27a', dark: '#5a4e20' },
+  ],
+  'Badges': [
+    { var: '--badge-admin-bg',  label: 'Admin Badge',      light: '#c0392b', dark: '#c0392b' },
+    { var: '--badge-mod-bg',    label: 'Mod Badge',        light: '#2980b9', dark: '#2471a3' },
+    { var: '--badge-member-bg', label: 'Member Badge',     light: '#7f8c8d', dark: '#4a4f55' },
+  ],
+};
+
+function buildDefaultColors(themeKey) {
+  const result = {};
+  Object.values(COLOR_VARS).flat().forEach(({ var: v, [themeKey]: def }) => {
+    result[v] = def;
+  });
+  return result;
+}
+
+function loadSavedColors(themeKey) {
+  try {
+    const saved = localStorage.getItem(`themeColors_${themeKey}`);
+    if (saved) return { ...buildDefaultColors(themeKey), ...JSON.parse(saved) };
+  } catch {}
+  return buildDefaultColors(themeKey);
+}
+
+function applyColorsToDOM(lightColors, darkColors) {
+  const toVars = (colors) =>
+    Object.entries(colors).map(([k, v]) => `  ${k}: ${v};`).join('\n');
+  let tag = document.getElementById('theme-color-override');
+  if (!tag) {
+    tag = document.createElement('style');
+    tag.id = 'theme-color-override';
+    document.head.appendChild(tag);
+  }
+  tag.textContent = `.light {\n${toVars(lightColors)}\n}\n.dark {\n${toVars(darkColors)}\n}`;
+}
+
+function buildHexDrafts(lightColors, darkColors) {
+  const drafts = {};
+  Object.values(COLOR_VARS).flat().forEach(({ var: v }) => {
+    drafts[`light_${v}`] = lightColors[v];
+    drafts[`dark_${v}`] = darkColors[v];
+  });
+  return drafts;
+}
+
 export default function TermsOfService({ onNavigate }) {
 
   const { user, token } = useAuth();
@@ -11,6 +87,12 @@ export default function TermsOfService({ onNavigate }) {
   const [categories, setCategories] = useState([]);
   const [status, setStatus] = useState("");
   const [hexDraft, setHexDraft] = useState(topform.topcolor);
+
+  const [lightColors, setLightColors] = useState(() => loadSavedColors('light'));
+  const [darkColors, setDarkColors] = useState(() => loadSavedColors('dark'));
+  const [themeHexDrafts, setThemeHexDrafts] = useState(() => buildHexDrafts(loadSavedColors('light'), loadSavedColors('dark')));
+  const [colorStatus, setColorStatus] = useState('');
+  const [activeThemeTab, setActiveThemeTab] = useState('light');
 
   const capitalize = str => str[0].toUpperCase() + str.slice(1);
 
@@ -67,6 +149,17 @@ export default function TermsOfService({ onNavigate }) {
     return () => { cancelled = true; };
   }, []);
 
+  // Apply any saved theme colors on mount
+  useEffect(() => {
+    if (localStorage.getItem('themeColors_light') || localStorage.getItem('themeColors_dark')) {
+      applyColorsToDOM(lightColors, darkColors);
+    }
+  }, []);
+
+  // Live-preview: apply color changes to DOM as admin adjusts them
+  useEffect(() => {
+    applyColorsToDOM(lightColors, darkColors);
+  }, [lightColors, darkColors]);
 
 
   // Submit Form Values to Server Side
@@ -107,6 +200,60 @@ export default function TermsOfService({ onNavigate }) {
   };
 
 
+  // Theme color handlers
+
+  const handleThemeColorPick = (theme, varName, value) => {
+    if (theme === 'light') setLightColors(prev => ({ ...prev, [varName]: value }));
+    else setDarkColors(prev => ({ ...prev, [varName]: value }));
+    setThemeHexDrafts(prev => ({ ...prev, [`${theme}_${varName}`]: value }));
+  };
+
+  const handleThemeHexType = (theme, varName, rawValue) => {
+    let value = rawValue.trim();
+    if (value && !value.startsWith('#')) value = '#' + value;
+    setThemeHexDrafts(prev => ({ ...prev, [`${theme}_${varName}`]: value }));
+    if (/^#[0-9a-fA-F]{6}$/.test(value)) {
+      const lower = value.toLowerCase();
+      if (theme === 'light') setLightColors(prev => ({ ...prev, [varName]: lower }));
+      else setDarkColors(prev => ({ ...prev, [varName]: lower }));
+    }
+  };
+
+  const handleThemeHexBlur = (theme, varName) => {
+    const draft = themeHexDrafts[`${theme}_${varName}`] || '';
+    const expanded = /^#[0-9a-fA-F]{3}$/.test(draft)
+      ? '#' + draft.slice(1).split('').map(c => c + c).join('')
+      : draft;
+    const currentColors = theme === 'light' ? lightColors : darkColors;
+    if (/^#[0-9a-fA-F]{6}$/.test(expanded)) {
+      const lower = expanded.toLowerCase();
+      if (theme === 'light') setLightColors(prev => ({ ...prev, [varName]: lower }));
+      else setDarkColors(prev => ({ ...prev, [varName]: lower }));
+      setThemeHexDrafts(prev => ({ ...prev, [`${theme}_${varName}`]: lower }));
+    } else {
+      setThemeHexDrafts(prev => ({ ...prev, [`${theme}_${varName}`]: currentColors[varName] }));
+    }
+  };
+
+  const handleSaveThemeColors = () => {
+    localStorage.setItem('themeColors_light', JSON.stringify(lightColors));
+    localStorage.setItem('themeColors_dark', JSON.stringify(darkColors));
+    setColorStatus('Theme colors saved!');
+    setTimeout(() => setColorStatus(''), 3000);
+  };
+
+  const handleResetThemeColors = () => {
+    const newLight = buildDefaultColors('light');
+    const newDark = buildDefaultColors('dark');
+    setLightColors(newLight);
+    setDarkColors(newDark);
+    setThemeHexDrafts(buildHexDrafts(newLight, newDark));
+    localStorage.removeItem('themeColors_light');
+    localStorage.removeItem('themeColors_dark');
+    setColorStatus('Theme colors reset to defaults!');
+    setTimeout(() => setColorStatus(''), 3000);
+  };
+
 
   if (user.username == 'admin') {
 
@@ -116,7 +263,7 @@ export default function TermsOfService({ onNavigate }) {
                   <div className="admin-card">
                     <div className="admin-header">
 
-                        <h1 className="general-heading">Admin Settings</h1>
+                        <h1 className="general-heading">Forum Settings</h1>
                         <hr></hr>
                         <br></br>
                         <h3>
@@ -128,14 +275,20 @@ export default function TermsOfService({ onNavigate }) {
                         <br></br>
                         <hr></hr>
                         <br></br>
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <button type="button" className="tag-btn" onClick={() => document.getElementById('section-categories').scrollIntoView({ behavior: 'smooth' })}>Categories &amp; Topics</button>
+                          <button type="button" className="tag-btn" onClick={() => document.getElementById('section-ban').scrollIntoView({ behavior: 'smooth' })}>Ban Users</button>
+                          <button type="button" className="tag-btn" onClick={() => document.getElementById('section-theme').scrollIntoView({ behavior: 'smooth' })}>Theme Colors</button>
+                        </div>
+                        <br></br>
                     </div>
                   </div>
 
-                  <div className="admin-card">
+                  <div id="section-categories" className="admin-card">
                     <div className="admin-content">
                         <h2><b> Add / Remove Categories </b></h2>
                         <br></br>
-                        <p> Categories are the Green Section Names on the Home Page (ie.. INFORMATION, GAMEPLAY, COMMUNITY). 
+                        <p> Categories are the Green Section Names on the Home Page (ie.. INFORMATION, GAMEPLAY, COMMUNITY).
                           From here you are able to add / remove categories. If you choose to remove a category on the backend, be sure to remove any rows under it in other tables
                           (topics, threads, posts) </p>
                         <br></br>
@@ -253,6 +406,14 @@ export default function TermsOfService({ onNavigate }) {
                         <br></br>
                         <hr></hr>
                         <br></br>
+
+
+                        <button className="btn-submit-reply" onClick={() => onNavigate('home')}>Return to Homepage</button>
+                    </div>
+                  </div>
+
+                  <div id="section-ban" className="admin-card">
+                    <div className="admin-content">
                         <h2><b> Ban Users from Forum</b></h2>
                         <br></br>
                         <p> Here you will be able to ban Specific Users from Interacting on the Forums </p>
@@ -260,8 +421,73 @@ export default function TermsOfService({ onNavigate }) {
                         <hr></hr>
                         <br></br>
 
-
                         <button className="btn-submit-reply" onClick={() => onNavigate('home')}>Return to Homepage</button>
+                    </div>
+                  </div>
+
+                  <div id="section-theme" className="admin-card">
+                    <div className="admin-content">
+                        <h2><b> Theme Colors </b></h2>
+                        <br></br>
+                        <p> Customize the color variables used throughout the site for both Light and Dark modes.
+                          Changes are previewed live as you adjust colors. Click Save to persist your changes across sessions,
+                          or Reset to restore the original defaults. </p>
+                        <br></br>
+                        <hr></hr>
+                        <br></br>
+
+                        <div className="color-row" style={{ gap: '0.5rem', marginBottom: '1.25rem' }}>
+                          <button
+                            type="button"
+                            className="btn"
+                            style={{ opacity: activeThemeTab === 'light' ? 1 : 0.45 }}
+                            onClick={() => setActiveThemeTab('light')}
+                          >Light Mode</button>
+                          <button
+                            type="button"
+                            className="btn"
+                            style={{ opacity: activeThemeTab === 'dark' ? 1 : 0.45 }}
+                            onClick={() => setActiveThemeTab('dark')}
+                          >Dark Mode</button>
+                        </div>
+
+                        {Object.entries(COLOR_VARS).map(([groupName, vars]) => (
+                          <div key={groupName}>
+                            <p><b>{groupName}</b></p>
+                            <br></br>
+                            {vars.map(({ var: varName, label }) => (
+                              <div className="form-group" key={varName}>
+                                <label>{label}</label>
+                                <div className="color-row">
+                                  <input
+                                    type="color"
+                                    value={activeThemeTab === 'light' ? lightColors[varName] : darkColors[varName]}
+                                    onChange={e => handleThemeColorPick(activeThemeTab, varName, e.target.value)}
+                                  />
+                                  <input
+                                    type="text"
+                                    value={themeHexDrafts[`${activeThemeTab}_${varName}`] || ''}
+                                    onChange={e => handleThemeHexType(activeThemeTab, varName, e.target.value)}
+                                    onBlur={() => handleThemeHexBlur(activeThemeTab, varName)}
+                                    placeholder="#000000"
+                                    maxLength={7}
+                                    spellCheck={false}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                            <br></br>
+                          </div>
+                        ))}
+
+                        <div className="color-row" style={{ gap: '0.75rem' }}>
+                          <button type="button" className="btn" onClick={handleSaveThemeColors}>Save Theme Colors</button>
+                          <br></br>
+                          <button type="button" className="btn" onClick={handleResetThemeColors}>Reset to Defaults</button>
+                          <br></br>
+                          <button className="btn-submit-reply" onClick={() => onNavigate('home')}>Return to Homepage</button>
+                        </div>
+                        {colorStatus && <p className="form-status">{colorStatus}</p>}
                     </div>
                   </div>
 
@@ -277,7 +503,7 @@ export default function TermsOfService({ onNavigate }) {
                       <h1 className="general-heading">Unauthorized User - Page Not Permitted</h1>
                       <hr></hr>
                       <br></br>
-                 
+
 
                       <button className="btn-submit-reply" onClick={() => onNavigate('home')}>Return to Homepage</button>
 
