@@ -3,10 +3,13 @@ import CategoryRow from './CategoryRow'
 import { useState, useEffect } from 'react'
 import { api } from '../api';
 
+const API = 'http://localhost:3001/api';
+
 export default function ForumHome({ onNavigate }) {
 
   const [categories, setCategories] = useState([]);
   const [topics, setTopics] = useState([]);
+  const [stats, setStats] = useState({ threads: 0, posts: 0, members: 0, online: 0, newest: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -18,35 +21,24 @@ export default function ForumHome({ onNavigate }) {
   //}, []);  // empty array = run once when component mounts
 
 
-  useEffect(() => {
+   useEffect(() => {
     let cancelled = false;
+    const token = localStorage.getItem('token'); // adjust to wherever you store the JWT
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
     (async () => {
       try {
-        const res = await fetch("http://localhost:3001/api/categories");
-        const data = await res.json();
-        if (!cancelled) setCategories(Array.isArray(data) ? data : []);
+        const [cats, tops, st] = await Promise.all([
+          fetch(`${API}/categories`).then(r => r.json()),
+          fetch(`${API}/topics`).then(r => r.json()),
+          fetch(`${API}/stats`, { headers }).then(r => r.json()),
+        ]);
+        if (cancelled) return;
+        setCategories(Array.isArray(cats) ? cats : []);
+        setTopics(Array.isArray(tops) ? tops : []);
+        setStats(st);
       } catch {
-        if (!cancelled) setError("Could not load categories");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, []);
-
-
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const res = await fetch("http://localhost:3001/api/topics");
-        const data = await res.json();
-        if (!cancelled) setTopics(Array.isArray(data) ? data : []);
-      } catch {
-        if (!cancelled) setStatus("Could not load topics");
+        if (!cancelled) setError('Could not load the forum');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -91,13 +83,13 @@ export default function ForumHome({ onNavigate }) {
           <div className="sidebar-card">
             <h3 className="sidebar-card-title">Forum Statistics</h3>
             <ul className="stats-list">
-              <li><span className="stat-label">Threads</span><span className="stat-value">0</span></li>
-              <li><span className="stat-label">Posts</span><span className="stat-value">0</span></li>
-              <li><span className="stat-label">Members</span><span className="stat-value">0</span></li>
-              <li><span className="stat-label">Online Now</span><span className="stat-value online">0</span></li>
+              <li><span className="stat-label">Threads</span><span className="stat-value">{stats.threads.toLocaleString()}</span></li>
+              <li><span className="stat-label">Posts</span><span className="stat-value">{stats.posts.toLocaleString()}</span></li>
+              <li><span className="stat-label">Members</span><span className="stat-value">{stats.members.toLocaleString()}</span></li>
+              <li><span className="stat-label">Online Now</span><span className="stat-value online">{stats.online}</span></li>
             </ul>
             <div className="newest-member">
-              Newest: <span className="member-link">ReginaldTheBrawn</span>
+              Newest: <span className="member-link">{stats.newest ?? '—'}</span>
             </div>
           </div>
 

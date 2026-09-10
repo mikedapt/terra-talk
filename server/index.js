@@ -61,6 +61,44 @@ app.use(express.json());
 
 
 
+// --- Online tracking (in-memory) ---
+const ONLINE_WINDOW_MS = 5 * 60 * 1000; // "online" = active in the last 5 minutes
+const lastSeen = new Map(); // userId -> timestamp
+
+app.use((req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (token) {
+    try {
+      const { id } = jwt.verify(token, JWT_SECRET);
+      lastSeen.set(id, Date.now());
+    } catch { /* bad tokens are rejected by authRequired where it matters */ }
+  }
+  next();
+});
+
+function countOnline() {
+  const cutoff = Date.now() - ONLINE_WINDOW_MS;
+  for (const [id, ts] of lastSeen) {
+    if (ts < cutoff) lastSeen.delete(id); // prune stale entries as we go
+  }
+  return lastSeen.size;
+}
+
+// --- Stats ---
+const statsQuery = db.prepare(`
+  SELECT
+    (SELECT COUNT(*) FROM threads) AS threads,
+    (SELECT COUNT(*) FROM posts)   AS posts,
+    (SELECT COUNT(*) FROM users)   AS members,
+    (SELECT username FROM users ORDER BY id DESC LIMIT 1) AS newest
+`);
+
+app.get('/api/stats', (req, res) => {
+  res.json({ ...statsQuery.get(), online: countOnline() });
+});
+
+
+
 // Uploader Variables
 
 const PROFILE_DIR = path.join(__dirname, 'public', 'profiles');
@@ -105,6 +143,13 @@ function authRequired(req, res, next) {
   } catch {
     res.status(401).json({ error: 'Invalid token' });
   }
+}
+
+function adminRequired(req, res, next) {
+  if (req.user?.username !== 'admin') {
+    return res.status(403).json({ error: 'Admins only' });
+  }
+  next();
 }
 
 // --- Auth ---
@@ -258,16 +303,15 @@ app.get('/api/categories', (req, res) => {
   res.json(rows);
 });**/
 
-app.post('/api/categories', async (req, res) => {
-  const { catname, catdesc, catauthor } = req.body;
-  const catcheck = db.prepare('SELECT id, name, description FROM categories WHERE name = ?').get(catname);
-
-  if ( !catcheck ) {
-     db.prepare('INSERT INTO categories (name, description, created_by) VALUES (?, ?, ?)').run(catname, catdesc, catauthor);
-  } else {
-     return res.status(401).json({ error: 'ERROR: Category Already Exist' });
+app.post('/api/categories', authRequired, adminRequired, (req, res) => {
+  const { catname, catdesc } = req.body;
+  if (db.prepare('SELECT 1 FROM categories WHERE name = ?').get(catname)) {
+    return res.status(409).json({ error: 'Category already exists' });
   }
-
+  const info = db
+    .prepare('INSERT INTO categories (name, description, created_by) VALUES (?, ?, ?)')
+    .run(catname, catdesc, req.user.id);
+  res.status(201).json({ id: info.lastInsertRowid });
 });
 
 //app.post('/api/categories', authRequired, (req, res) => {
@@ -294,17 +338,15 @@ app.get('/api/topics', (req, res) => {
   res.json(rows);
 });
 
-app.post('/api/topics', async (req, res) => {
-  const { topname, topdesc, topcat, topicon, topcolor, topauthor } = req.body;
-  console.log(topname, topdesc, topcat, topicon, topcolor, topauthor);
-  const topcheck = db.prepare('SELECT id, category_id, name, icon, title, description, accentColor FROM topics WHERE name = ?').get(topname);
-
-  if ( !topcheck ) {
-     db.prepare('INSERT INTO topics (category_id, name, icon, title, description, accentColor, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)').run(topcat, topname, topicon, topname, topdesc, topcolor, topauthor);
-  } else {
-     return res.status(401).json({ error: 'ERROR: Topic Already Exist' });
+app.post('/api/topics', authRequired, adminRequired, (req, res) => {
+  const { topname, topdesc, topcat, topicon, topcolor } = req.body;
+  if (db.prepare('SELECT 1 FROM topics WHERE name = ?').get(topname)) {
+    return res.status(409).json({ error: 'Topic already exists' });
   }
-
+  const info = db
+    .prepare('INSERT INTO topics (category_id, name, icon, title, description, accentColor, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .run(topcat, topname, topicon, topname, topdesc, topcolor, req.user.id);
+  res.status(201).json({ id: info.lastInsertRowid });
 });
 
 //app.post('/api/categories/:id/topics', authRequired, (req, res) => {
@@ -347,7 +389,7 @@ app.get('/api/threads', (req, res) => {
   res.json(rows);
 });
 
-app.post('/api/newthread', async (req, res) => {
+app.post('/api/newthread', authRequired, async (req, res) => {
 
   const { threadtitle, threadbody, threadauthor, threadtopic } = req.body;
   const gettopicid = db.prepare('SELECT id FROM topics WHERE name = ?').get(threadtopic);
@@ -360,7 +402,8 @@ app.post('/api/newthread', async (req, res) => {
      // console.log(gettopicid.id);
      const getthreadid = db.prepare('SELECT id, topic_id, user_id, title, body FROM threads WHERE title = ? AND topic_id = ?').get(threadtitle,gettopicid);
      if( !getthreadid ) {
-     db.prepare('INSERT INTO threads (topic_id, user_id, title, body) VALUES (?, ?, ?, ?)').run(gettopicid.id, threadauthor, threadtitle, threadbody);
+         const rows = db.prepare('INSERT INTO threads (topic_id, user_id, title, body) VALUES (?, ?, ?, ?)').run(gettopicid.id, threadauthor, threadtitle, threadbody);
+         res.status(201).json(rows);
      } else {
          return res.status(401).json({ error: 'ERROR: Thread Already Exists' });
      }
@@ -371,7 +414,7 @@ app.post('/api/newthread', async (req, res) => {
 // --- Posts (replies) ---
 
 
-app.get('/api/posts', (req, res) => {
+app.get('/api/posts',  (req, res) => {
    
   const rows = db.prepare(`
     SELECT p.id, p.thread_id, p.body, p.created_at,
@@ -383,7 +426,7 @@ app.get('/api/posts', (req, res) => {
   res.json(rows);
 });
 
-app.post('/api/newpost', async (req, res) => {
+app.post('/api/newpost', authRequired, async (req, res) => {
 
   const { postbody, postauthor, postthread } = req.body;
   const getthreadid = db.prepare('SELECT id FROM threads WHERE id = ?').get(postthread);

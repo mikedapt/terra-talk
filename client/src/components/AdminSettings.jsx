@@ -4,7 +4,7 @@ import { useAuth } from '../AuthContext';
 
 export default function TermsOfService({ onNavigate }) {
 
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   const [catform, setCatForm] = useState({ catname: "", catdesc: "", catauthor: user.id});
   const [topform, setTopForm] = useState({ topname: "", topdesc: "", topcat: "", topicon: "💬", topcolor: "#4CAF50", topauthor: user.id});
@@ -72,51 +72,38 @@ export default function TermsOfService({ onNavigate }) {
   // Submit Form Values to Server Side
 
   const handleChange = (e) => {
-
-    setCatForm({ ...catform, [e.target.name]: e.target.value });
-    if (e.target.name.substring(0,3) == "cat"){
-       setCatForm({ ...catform, [e.target.name]: e.target.value });
-    }
-
-    if (e.target.name.substring(0,3) == "top"){
-       setTopForm({ ...topform, [e.target.name]: e.target.value });
-    }
+    const { name, value } = e.target;
+    if (name.startsWith('cat')) setCatForm(prev => ({ ...prev, [name]: value }));
+    if (name.startsWith('top')) setTopForm(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (e.target.id.substring(0,6) == "addcat"){
-       try {
-        const res = await fetch("http://localhost:3001/api/categories", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(catform),
-        });
-        const data = await res.json();
-        setStatus(res.ok ? "Category Added!" : data.error || "Something went wrong");
-        window.location.reload()
+    const isCategory = e.target.id === 'addcat-form';
 
-      } catch {
-        setStatus("Network error");
+    try {
+      const res = await fetch(`http://localhost:3001/api/${isCategory ? 'categories' : 'topics'}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(isCategory ? catform : topform),
+      });
+      const data = await res.json();
+      if (!res.ok) return setStatus(data.error || 'Something went wrong');
+
+      if (isCategory) {
+        setCategories(prev => [...prev, { id: data.id, name: catform.catname, description: catform.catdesc }]);
+        setCatForm({ catname: '', catdesc: '' });
+        setStatus('Category Added!');
+      } else {
+        setTopForm(prev => ({ ...prev, topname: '', topdesc: '' }));
+        setStatus('Topic Added!');
       }
+    } catch {
+      setStatus('Network error');
     }
-
-    if (e.target.id.substring(0,6) == "addtop"){
-       try {
-        const res = await fetch("http://localhost:3001/api/topics", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(topform),
-        });
-        const data = await res.json();
-        setStatus(res.ok ? "Topic Added!" : data.error || "Something went wrong");
-        window.location.reload()
-
-      } catch {
-        setStatus("Network error");
-      }
-    }
-    
   };
 
 
@@ -175,6 +162,7 @@ export default function TermsOfService({ onNavigate }) {
                           </div>
 
                           <button type="submit" className="btn">Add Category</button>
+                          {status && <p className="form-status">{status}</p>}
 
                         </form>
 
@@ -256,6 +244,7 @@ export default function TermsOfService({ onNavigate }) {
                           </div>
 
                           <button type="submit" className="btn">Add Topic</button>
+                          {status && <p className="form-status">{status}</p>}
 
                         </form>
 
