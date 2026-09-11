@@ -97,6 +97,38 @@ app.get('/api/stats', (req, res) => {
   res.json({ ...statsQuery.get(), online: countOnline() });
 });
 
+// --- Thread / Post Count ---
+const ThreadPostQuery = db.prepare(`
+  SELECT
+    COUNT(DISTINCT t.id) AS threadcount,
+    COUNT(p.id) AS postcount
+    FROM threads t
+    LEFT JOIN posts p ON p.thread_id = t.id
+    WHERE t.topic_id = ?
+`);
+
+app.get('/api/threadpostquery', (req, res) => {
+
+  res.json({ ...ThreadPostQuery.get(req.query.topic_id) });
+});
+
+
+// --- Latest Post ---
+const LatestPostQuery = db.prepare(`
+  SELECT
+     t.title AS threadtitle,
+     u.username AS author,
+     t.created_at AS time
+     FROM threads t
+     INNER JOIN users u ON t.user_id = u.id
+     WHERE t.topic_id = ? 
+     ORDER BY t.created_at LIMIT 1 `);
+
+app.get('/api/latestpostquery', (req, res) => {
+
+  res.json({ ...LatestPostQuery.get(req.query.topic_id) });
+});
+
 
 
 // Uploader Variables
