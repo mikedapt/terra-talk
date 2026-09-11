@@ -98,6 +98,15 @@ export default function TermsOfService({ onNavigate }) {
   const [headerTagline, setHeaderTagline] = useState(() => localStorage.getItem('siteTagline') || 'Your world. Your voice.');
   const [headerStatus, setHeaderStatus] = useState('');
 
+  const [serverAddress, setServerAddress] = useState(() => localStorage.getItem('serverAddress') || 'play.yourserver.net');
+  const [serverVersions, setServerVersions] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('serverVersions')) || ['Java 1.21.4', 'Bedrock 1.21.x']; }
+    catch { return ['Java 1.21.4', 'Bedrock 1.21.x']; }
+  });
+  const [serverOnline, setServerOnline] = useState(() => localStorage.getItem('serverOnline') !== 'false');
+  const [newVersionTag, setNewVersionTag] = useState('');
+  const [serverInfoStatus, setServerInfoStatus] = useState('');
+
   const logoFileInputRef = useRef(null);
   const [currentLogoUrl, setCurrentLogoUrl] = useState(() => localStorage.getItem('siteLogoUrl') || null);
   const [logoPreview, setLogoPreview] = useState(null);
@@ -282,6 +291,38 @@ export default function TermsOfService({ onNavigate }) {
     setTimeout(() => setHeaderStatus(''), 3000);
   };
 
+  const handleSaveServerInfo = () => {
+    localStorage.setItem('serverAddress', serverAddress);
+    localStorage.setItem('serverVersions', JSON.stringify(serverVersions));
+    localStorage.setItem('serverOnline', String(serverOnline));
+    window.dispatchEvent(new Event('siteSettingsChanged'));
+    setServerInfoStatus('Server info saved!');
+    setTimeout(() => setServerInfoStatus(''), 3000);
+  };
+
+  const handleResetServerInfo = () => {
+    setServerAddress('play.yourserver.net');
+    setServerVersions(['Java 1.21.4', 'Bedrock 1.21.x']);
+    setServerOnline(true);
+    localStorage.removeItem('serverAddress');
+    localStorage.removeItem('serverVersions');
+    localStorage.removeItem('serverOnline');
+    window.dispatchEvent(new Event('siteSettingsChanged'));
+    setServerInfoStatus('Server info reset to defaults!');
+    setTimeout(() => setServerInfoStatus(''), 3000);
+  };
+
+  const handleAddVersionTag = () => {
+    const tag = newVersionTag.trim();
+    if (!tag || serverVersions.includes(tag)) return;
+    setServerVersions(prev => [...prev, tag]);
+    setNewVersionTag('');
+  };
+
+  const handleRemoveVersionTag = (tag) => {
+    setServerVersions(prev => prev.filter(v => v !== tag));
+  };
+
   async function handleLogoFileChange(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -351,12 +392,83 @@ export default function TermsOfService({ onNavigate }) {
                         <hr></hr>
                         <br></br>
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <button type="button" className="tag-btn" onClick={() => document.getElementById('section-server').scrollIntoView({ behavior: 'smooth' })}>Server Info</button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-header').scrollIntoView({ behavior: 'smooth' })}>Header Settings</button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-categories').scrollIntoView({ behavior: 'smooth' })}>Categories &amp; Topics</button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-ban').scrollIntoView({ behavior: 'smooth' })}>Ban Users</button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-theme').scrollIntoView({ behavior: 'smooth' })}>Theme Colors</button>
                         </div>
                         <br></br>
+                    </div>
+                  </div>
+
+                  <div id="section-server" className="admin-card">
+                    <div className="admin-content">
+                        <h2><b> Server Info </b></h2>
+                        <br></br>
+                        <p> Customize the server address, version tags, and online status shown in the sidebar. </p>
+                        <br></br>
+                        <hr></hr>
+                        <br></br>
+
+                        <div className="form-group">
+                          <label htmlFor="serverAddress">Server Address</label>
+                          <input
+                            type="text"
+                            id="serverAddress"
+                            value={serverAddress}
+                            onChange={e => setServerAddress(e.target.value)}
+                            placeholder="play.yourserver.net"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label>Version Tags</label>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.6rem' }}>
+                            {serverVersions.map(tag => (
+                              <span key={tag} className="version-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                                {tag}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveVersionTag(tag)}
+                                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0', lineHeight: 1, fontSize: '0.85rem', color: 'inherit', opacity: 0.7 }}
+                                  aria-label={`Remove ${tag}`}
+                                >×</button>
+                              </span>
+                            ))}
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <input
+                              type="text"
+                              value={newVersionTag}
+                              onChange={e => setNewVersionTag(e.target.value)}
+                              onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddVersionTag())}
+                              placeholder="e.g. Java 1.21.4"
+                            />
+                            <button type="button" className="btn" onClick={handleAddVersionTag}>Add</button>
+                          </div>
+                        </div>
+
+                        <div className="form-group">
+                          <label>Server Status</label>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.25rem' }}>
+                            <span className={`status-dot ${serverOnline ? 'online' : 'offline'}`} style={{ flexShrink: 0 }}></span>
+                            <span>{serverOnline ? 'Online' : 'Offline'}</span>
+                            <button
+                              type="button"
+                              className="btn"
+                              onClick={() => setServerOnline(prev => !prev)}
+                            >
+                              Set {serverOnline ? 'Offline' : 'Online'}
+                            </button>
+                          </div>
+                        </div>
+
+                        <button type="button" className="btn" onClick={handleSaveServerInfo}>Save Server Info</button>
+                        <br></br>
+                        <br></br>
+                        <button type="button" className="btn" onClick={handleResetServerInfo}>Restore Defaults</button>
+                        {serverInfoStatus && <p className="form-status">{serverInfoStatus}</p>}
                     </div>
                   </div>
 

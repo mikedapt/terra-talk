@@ -13,6 +13,13 @@ export default function ForumHome({ onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const loadServerInfo = () => ({
+    address: localStorage.getItem('serverAddress') || 'play.yourserver.net',
+    versions: (() => { try { return JSON.parse(localStorage.getItem('serverVersions')) || ['Java 1.21.4', 'Bedrock 1.21.x']; } catch { return ['Java 1.21.4', 'Bedrock 1.21.x']; } })(),
+    online: localStorage.getItem('serverOnline') !== 'false',
+  });
+  const [serverInfo, setServerInfo] = useState(loadServerInfo);
+
  // useEffect(() => {
     //api('/categories')
       //.then(setCategories)
@@ -45,6 +52,12 @@ export default function ForumHome({ onNavigate }) {
     })();
 
     return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setServerInfo(loadServerInfo());
+    window.addEventListener('siteSettingsChanged', handler);
+    return () => window.removeEventListener('siteSettingsChanged', handler);
   }, []);
 
 
@@ -109,15 +122,16 @@ export default function ForumHome({ onNavigate }) {
             <h3 className="sidebar-card-title">Server Info</h3>
             <div className="server-address">
               <span className="server-label">IP Address</span>
-              <code className="server-ip">play.yourserver.net</code>
+              <code className="server-ip">{serverInfo.address}</code>
             </div>
             <div className="server-version">
-              <span className="version-badge">Java 1.21.4</span>
-              <span className="version-badge">Bedrock 1.21.x</span>
+              {serverInfo.versions.map(v => (
+                <span key={v} className="version-badge">{v}</span>
+              ))}
             </div>
             <div className="server-status">
-              <span className="status-dot online"></span>
-              <span className="status-text">Server Online</span>
+              <span className={`status-dot ${serverInfo.online ? 'online' : 'offline'}`}></span>
+              <span className="status-text">{serverInfo.online ? 'Server Online' : 'Server Offline'}</span>
             </div>
           </div>
         </aside>
