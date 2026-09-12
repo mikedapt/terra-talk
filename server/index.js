@@ -517,6 +517,47 @@ app.post('/api/newpost', authRequired, async (req, res) => {
 //  res.json({ id: info.lastInsertRowid });
 //});
 
+// --- Quicklinks ---
+app.get('/api/quicklinks', (req, res) => {
+  const rows = db.prepare('SELECT id, title, icon, link FROM quicklinks ORDER BY id').all();
+  res.json(rows);
+});
+
+app.post('/api/quicklinks', authRequired, adminRequired, (req, res) => {
+  const { title, icon, link } = req.body;
+  if (!title) return res.status(400).json({ error: 'Title is required' });
+  const info = db.prepare('INSERT INTO quicklinks (title, icon, link, created_by) VALUES (?, ?, ?, ?)')
+    .run(title, icon || '', link || '', req.user.id);
+  res.status(201).json({ id: info.lastInsertRowid });
+});
+
+app.delete('/api/quicklinks/:id', authRequired, adminRequired, (req, res) => {
+  const result = db.prepare('DELETE FROM quicklinks WHERE id = ?').run(req.params.id);
+  if (result.changes === 0) return res.status(404).json({ error: 'Quicklink not found' });
+  res.json({ success: true });
+});
+
+app.post('/api/quicklinks/reset', authRequired, adminRequired, (req, res) => {
+  const defaults = [
+    { title: 'Server Rules', icon: '📋', link: '#' },
+    { title: 'Server Map',   icon: '🗺️', link: '#' },
+    { title: 'Server Shop',  icon: '🛍️', link: '#' },
+    { title: 'Leaderboards', icon: '📊', link: '#' },
+    { title: 'Ban Appeals',  icon: '🎫', link: '#' },
+    { title: 'Discord',      icon: '💬', link: '#' },
+  ];
+  const insert = db.prepare('INSERT INTO quicklinks (title, icon, link, created_by) VALUES (?, ?, ?, ?)');
+  const resetTx = db.transaction(() => {
+    db.prepare('DELETE FROM quicklinks').run();
+    for (const { title, icon, link } of defaults) {
+      insert.run(title, icon, link, req.user.id);
+    }
+  });
+  resetTx();
+  const rows = db.prepare('SELECT id, title, icon, link FROM quicklinks ORDER BY id').all();
+  res.json(rows);
+});
+
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     return res.status(400).json({

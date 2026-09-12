@@ -51,6 +51,15 @@ db.exec(`
     FOREIGN KEY (created_by) REFERENCES users(id)
   );
 
+  CREATE TABLE IF NOT EXISTS quicklinks (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    title       TEXT NOT NULL,
+    icon        TEXT,
+    link        TEXT,
+    created_by  INTEGER NOT NULL,
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS threads (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     topic_id  INTEGER NOT NULL,
@@ -88,5 +97,22 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_threads_topic ON threads(topic_id);
   CREATE INDEX IF NOT EXISTS idx_posts_thread   ON posts(thread_id);
 `);
+
+// Seed default quicklinks if table is empty
+const qlCount = db.prepare('SELECT COUNT(*) as count FROM quicklinks').get();
+if (qlCount.count === 0) {
+  const insertQL = db.prepare('INSERT INTO quicklinks (title, icon, link, created_by) VALUES (?, ?, ?, ?)');
+  const defaults = [
+    ['Server Rules', '📋', '#', 1],
+    ['Server Map', '🗺️', '#', 1],
+    ['Server Shop', '🛍️', '#', 1],
+    ['Leaderboards', '📊', '#', 1],
+    ['Ban Appeals', '🎫', '#', 1],
+    ['Discord', '💬', '#', 1],
+  ];
+  for (const [title, icon, link, created_by] of defaults) {
+    insertQL.run(title, icon, link, created_by);
+  }
+}
 
 export default db;

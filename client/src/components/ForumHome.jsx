@@ -9,6 +9,7 @@ export default function ForumHome({ onNavigate }) {
 
   const [categories, setCategories] = useState([]);
   const [topics, setTopics] = useState([]);
+  const [quicklinks, setQuicklinks] = useState([]);
   const [stats, setStats] = useState({ threads: 0, posts: 0, members: 0, online: 0, newest: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,15 +36,17 @@ export default function ForumHome({ onNavigate }) {
 
     (async () => {
       try {
-        const [cats, tops, st] = await Promise.all([
+        const [cats, tops, st, qls] = await Promise.all([
           fetch(`${API}/categories`).then(r => r.json()),
           fetch(`${API}/topics`).then(r => r.json()),
           fetch(`${API}/stats`, { headers }).then(r => r.json()),
+          fetch(`${API}/quicklinks`).then(r => r.json()),
         ]);
         if (cancelled) return;
         setCategories(Array.isArray(cats) ? cats : []);
         setTopics(Array.isArray(tops) ? tops : []);
         setStats(st);
+        setQuicklinks(Array.isArray(qls) ? qls : []);
       } catch {
         if (!cancelled) setError('Could not load the forum');
       } finally {
@@ -109,12 +112,16 @@ export default function ForumHome({ onNavigate }) {
           <div className="sidebar-card">
             <h3 className="sidebar-card-title">Quick Links</h3>
             <ul className="quick-links">
-              <li><button className="quick-link-btn">📋 Server Rules</button></li>
-              <li><button className="quick-link-btn">🗺️ Server Map</button></li>
-              <li><button className="quick-link-btn">🛍️ Server Shop</button></li>
-              <li><button className="quick-link-btn">📊 Leaderboards</button></li>
-              <li><button className="quick-link-btn">🎫 Ban Appeals</button></li>
-              <li><button className="quick-link-btn">💬 Discord</button></li>
+              {quicklinks.map(ql => (
+                <li key={ql.id}>
+                  <button
+                    className="quick-link-btn"
+                    onClick={() => ql.link && ql.link !== '#' && window.open(ql.link, '_blank', 'noopener,noreferrer')}
+                  >
+                    {ql.icon} {ql.title}
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
 

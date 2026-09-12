@@ -86,6 +86,9 @@ export default function TermsOfService({ onNavigate }) {
   const [topform, setTopForm] = useState({ topname: "", topdesc: "", topcat: "", topicon: "💬", topcolor: "#4CAF50", topauthor: user.id});
   const [categories, setCategories] = useState([]);
   const [status, setStatus] = useState("");
+  const [quicklinks, setQuicklinks] = useState([]);
+  const [qlform, setQlForm] = useState({ qltitle: '', qlicon: '📋', qllink: '' });
+  const [qlStatus, setQlStatus] = useState('');
   const [hexDraft, setHexDraft] = useState(topform.topcolor);
 
   const [lightColors, setLightColors] = useState(() => loadSavedColors('light'));
@@ -181,12 +184,25 @@ export default function TermsOfService({ onNavigate }) {
   }, [lightColors, darkColors]);
 
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('http://localhost:3001/api/quicklinks');
+        const data = await res.json();
+        if (!cancelled) setQuicklinks(Array.isArray(data) ? data : []);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   // Submit Form Values to Server Side
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name.startsWith('cat')) setCatForm(prev => ({ ...prev, [name]: value }));
     if (name.startsWith('top')) setTopForm(prev => ({ ...prev, [name]: value }));
+    if (name.startsWith('ql')) setQlForm(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -218,6 +234,59 @@ export default function TermsOfService({ onNavigate }) {
     }
   };
 
+
+  const handleAddQuicklink = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('http://localhost:3001/api/quicklinks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ title: qlform.qltitle, icon: qlform.qlicon, link: qlform.qllink }),
+      });
+      const data = await res.json();
+      if (!res.ok) return setQlStatus(data.error || 'Something went wrong');
+      setQuicklinks(prev => [...prev, { id: data.id, title: qlform.qltitle, icon: qlform.qlicon, link: qlform.qllink }]);
+      setQlForm({ qltitle: '', qlicon: '📋', qllink: '' });
+      setQlStatus('Quicklink added!');
+      setTimeout(() => setQlStatus(''), 3000);
+    } catch {
+      setQlStatus('Network error');
+    }
+  };
+
+  const handleRestoreDefaultQuicklinks = async () => {
+    try {
+      const res = await fetch('http://localhost:3001/api/quicklinks/reset', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) return setQlStatus(data.error || 'Something went wrong');
+      setQuicklinks(data);
+      setQlStatus('Quicklinks restored to defaults!');
+      setTimeout(() => setQlStatus(''), 3000);
+    } catch {
+      setQlStatus('Network error');
+    }
+  };
+
+  const handleDeleteQuicklink = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/quicklinks/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        return setQlStatus(data.error || 'Something went wrong');
+      }
+      setQuicklinks(prev => prev.filter(ql => ql.id !== id));
+      setQlStatus('Quicklink removed!');
+      setTimeout(() => setQlStatus(''), 3000);
+    } catch {
+      setQlStatus('Network error');
+    }
+  };
 
   // Theme color handlers
 
@@ -395,6 +464,7 @@ export default function TermsOfService({ onNavigate }) {
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-server').scrollIntoView({ behavior: 'smooth' })}>Server Info</button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-header').scrollIntoView({ behavior: 'smooth' })}>Header Settings</button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-categories').scrollIntoView({ behavior: 'smooth' })}>Categories &amp; Topics</button>
+                          <button type="button" className="tag-btn" onClick={() => document.getElementById('section-quicklinks').scrollIntoView({ behavior: 'smooth' })}>Quicklinks </button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-ban').scrollIntoView({ behavior: 'smooth' })}>Ban Users</button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-theme').scrollIntoView({ behavior: 'smooth' })}>Theme Colors</button>
                         </div>
@@ -685,6 +755,96 @@ export default function TermsOfService({ onNavigate }) {
                         <hr></hr>
                         <br></br>
 
+
+                        <button className="btn-submit-reply" onClick={() => onNavigate('home')}>Return to Homepage</button>
+                    </div>
+                  </div>
+
+                  <div id="section-quicklinks" className="admin-card">
+                    <div className="admin-content">
+                        <h2><b> Quicklinks </b></h2>
+                        <br></br>
+                        <p> Add / Remove Quicklinks shown in the sidebar on the Home Page. </p>
+                        <br></br>
+                        <hr></hr>
+                        <br></br>
+
+                        <p> + Add Quicklink </p>
+
+                        <form id="addql-form" onSubmit={handleAddQuicklink} noValidate>
+
+                          <div className="form-group">
+                            <label htmlFor="qltitle">Title</label>
+                            <input type="text" id="qltitle" name="qltitle" value={qlform.qltitle}
+                              placeholder="Enter quicklink title" onChange={handleChange} required />
+                          </div>
+
+                          <div className="form-group">
+                            <label htmlFor="qlicon">Icon</label>
+                            <select id="qlicon" name="qlicon" value={qlform.qlicon} onChange={handleChange} required>
+                              <option value="📋">📋</option>
+                              <option value="🗺️">🗺️</option>
+                              <option value="🛍️">🛍️</option>
+                              <option value="📊">📊</option>
+                              <option value="🎫">🎫</option>
+                              <option value="💬">💬</option>
+                              <option value="🔧">🔧</option>
+                              <option value="🔌">🔌</option>
+                              <option value="🏗️">🏗️</option>
+                              <option value="👋">👋</option>
+                              <option value="💼">💼</option>
+                              <option value="📢">📢</option>
+                              <option value="🌐">🌐</option>
+                              <option value="🏆">🏆</option>
+                              <option value="⚙️">⚙️</option>
+                              <option value="📌">📌</option>
+                            </select>
+                          </div>
+
+                          <div className="form-group">
+                            <label htmlFor="qllink">Link URL</label>
+                            <input type="text" id="qllink" name="qllink" value={qlform.qllink}
+                              placeholder="https://..." onChange={handleChange} />
+                          </div>
+
+                          <button type="submit" className="btn">Add Quicklink</button>
+                          {qlStatus && <p className="form-status">{qlStatus}</p>}
+
+                        </form>
+
+                        <br></br>
+                        <p> - Remove Quicklinks </p>
+                        <br></br>
+                        <hr></hr>
+                        <br></br>
+
+                        {quicklinks.length === 0 ? (
+                          <p>No quicklinks yet.</p>
+                        ) : (
+                          <ul className="quick-links">
+                            {quicklinks.map(ql => (
+                              <li key={ql.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <p>{ql.icon} {ql.title}</p>
+                                <button
+                                  type="button"
+                                  className="btn"
+                                  onClick={() => handleDeleteQuicklink(ql.id)}
+                                  style={{ padding: '0.2rem 0.6rem', fontSize: '0.8rem' }}
+                                >Remove</button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                        <br></br>
+                        <hr></hr>
+                        <br></br>
+                        
+                        <button type="button" className="btn" onClick={handleRestoreDefaultQuicklinks}>Restore Defaults</button>
+                        {qlStatus && <p className="form-status">{qlStatus}</p>}
+                        <br></br>
+                        <hr></hr>
+                        <br></br>
 
                         <button className="btn-submit-reply" onClick={() => onNavigate('home')}>Return to Homepage</button>
                     </div>
