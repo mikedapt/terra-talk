@@ -20,12 +20,14 @@ export default function Header({ darkMode, toggleDark, onNavigate }) {
   const [siteTitle, setSiteTitle] = useState(() => localStorage.getItem('siteTitle') || 'TerraTalk');
   const [siteTagline, setSiteTagline] = useState(() => localStorage.getItem('siteTagline') || 'Your world. Your voice.');
   const [siteLogo, setSiteLogo] = useState(() => localStorage.getItem('siteLogoUrl') || null);
+  const [logoHidden, setLogoHidden] = useState(() => localStorage.getItem('logoHidden') === 'true');
 
   useEffect(() => {
     const handler = () => {
       setSiteTitle(localStorage.getItem('siteTitle') || 'TerraTalk');
       setSiteTagline(localStorage.getItem('siteTagline') || 'Your world. Your voice.');
       setSiteLogo(localStorage.getItem('siteLogoUrl') || null);
+      setLogoHidden(localStorage.getItem('logoHidden') === 'true');
     };
     window.addEventListener('siteSettingsChanged', handler);
     return () => window.removeEventListener('siteSettingsChanged', handler);
@@ -65,12 +67,14 @@ export default function Header({ darkMode, toggleDark, onNavigate }) {
       <div className="header-inner">
         <div className="header-left">
           {/* Replace this div with your own <img> tag to add a logo */}
-          <div className="logo-slot" onClick={() => onNavigate('home')} title="Click to go home">
-            {siteLogo
-              ? <img src={siteLogo} alt="Site logo" style={{ height: '100%', width: '100%', objectFit: 'contain' }} />
-              : <span className="logo-placeholder-text">YOUR LOGO</span>
-            }
-          </div>
+          {!logoHidden && (
+            <div className="logo-slot" onClick={() => onNavigate('home')} title="Click to go home">
+              {siteLogo
+                ? <img src={siteLogo} alt="Site logo" style={{ height: '100%', width: '100%', objectFit: 'contain' }} />
+                : <span className="logo-placeholder-text">YOUR LOGO</span>
+              }
+            </div>
+          )}
           <div className="site-title" onClick={() => onNavigate('home')}>
             <span className="site-name">{siteTitle}</span>
             <span className="site-tagline">{siteTagline}</span>

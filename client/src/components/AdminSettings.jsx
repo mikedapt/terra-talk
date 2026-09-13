@@ -112,6 +112,7 @@ export default function TermsOfService({ onNavigate }) {
 
   const logoFileInputRef = useRef(null);
   const [currentLogoUrl, setCurrentLogoUrl] = useState(() => localStorage.getItem('siteLogoUrl') || null);
+  const [logoHidden, setLogoHidden] = useState(() => localStorage.getItem('logoHidden') === 'true');
   const [logoPreview, setLogoPreview] = useState(null);
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoStatus, setLogoStatus] = useState(null);
@@ -431,6 +432,17 @@ export default function TermsOfService({ onNavigate }) {
     }
   }
 
+  const handleToggleLogoHidden = () => {
+    const next = !logoHidden;
+    setLogoHidden(next);
+    if (next) {
+      localStorage.setItem('logoHidden', 'true');
+    } else {
+      localStorage.removeItem('logoHidden');
+    }
+    window.dispatchEvent(new Event('siteSettingsChanged'));
+  };
+
   const handleRemoveLogo = () => {
     localStorage.removeItem('siteLogoUrl');
     window.dispatchEvent(new Event('siteSettingsChanged'));
@@ -622,6 +634,13 @@ export default function TermsOfService({ onNavigate }) {
                             disabled={logoUploading || !currentLogoUrl}
                           >
                             Remove Logo
+                          </button>
+                          <button
+                            type="button"
+                            className="btn"
+                            onClick={handleToggleLogoHidden}
+                          >
+                            {logoHidden ? 'Show Logo' : 'Hide Logo'}
                           </button>
                         </div>
                         {logoStatus && (
