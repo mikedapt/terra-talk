@@ -4,9 +4,9 @@ import { useAuth } from '../AuthContext';
 
 export default function CreateNewThread({ topic, onNavigate }) {
 
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
-  const [form, setForm] = useState({ threadtitle: "", threadbody: "", threadauthor: user.id, threadtopic: topic.name});
+  const [form, setForm] = useState({ threadtitle: "", threadbody: "", threadtopic: topic.id});
   const [status, setStatus] = useState("");
 
   const handleChange = (e) => {
@@ -20,7 +20,9 @@ export default function CreateNewThread({ topic, onNavigate }) {
     try {
       const res = await fetch("http://localhost:3001/api/newthread", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json",
+                   Authorization: `Bearer ${token}`,
+         },
         body: JSON.stringify(form),
       });
       const data = await res.json();
@@ -29,7 +31,7 @@ export default function CreateNewThread({ topic, onNavigate }) {
          return;
       }
       setStatus("New Thread Created");
-      window.location.reload()
+      setForm((f) => ({ ...f, threadtitle: "", threadbody: "" }));
 
     } catch {
       setStatus("Network error");
@@ -76,6 +78,7 @@ export default function CreateNewThread({ topic, onNavigate }) {
                     <div className="divider"></div>
 
                     </form>
+                    {status && <p className="form-status">{status}</p>}
 
                     <div className="form-group">
                         <button className="btn" onClick={() => onNavigate('home')}>Return to Homepage</button>

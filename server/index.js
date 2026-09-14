@@ -446,22 +446,15 @@ app.get('/api/threads', (req, res) => {
 
 app.post('/api/newthread', authRequired, async (req, res) => {
 
-  const { threadtitle, threadbody, threadauthor, threadtopic } = req.body;
-  const gettopicid = db.prepare('SELECT id FROM topics WHERE name = ?').get(threadtopic);
+  const { threadtitle, threadbody, threadtopic } = req.body;
+ 
+  const getthreadid = db.prepare('SELECT id, topic_id, user_id, title, body FROM threads WHERE title = ? AND topic_id = ?').get(threadtitle,threadtopic);
 
-  //console.log(threadtitle, threadbody, threadauthor, threadtopic);
-
-  if ( !gettopicid ) {
-     return res.status(401).json({ error: 'ERROR: Invalid Topic' });
+  if( !getthreadid ) {
+      const rows = db.prepare('INSERT INTO threads (topic_id, user_id, title, body) VALUES (?, ?, ?, ?)').run(threadtopic, req.user.id, threadtitle, threadbody);
+      res.status(201).json(rows);
   } else {
-     // console.log(gettopicid.id);
-     const getthreadid = db.prepare('SELECT id, topic_id, user_id, title, body FROM threads WHERE title = ? AND topic_id = ?').get(threadtitle,gettopicid);
-     if( !getthreadid ) {
-         const rows = db.prepare('INSERT INTO threads (topic_id, user_id, title, body) VALUES (?, ?, ?, ?)').run(gettopicid.id, threadauthor, threadtitle, threadbody);
-         res.status(201).json(rows);
-     } else {
-         return res.status(401).json({ error: 'ERROR: Thread Already Exists' });
-     }
+      return res.status(401).json({ error: 'ERROR: Thread Already Exists' });
   }
 
 });
