@@ -1,4 +1,4 @@
-import { useState} from 'react'
+import { useState, useEffect } from 'react'
 import Header from './components/Header'
 import ForumHome from './components/ForumHome'
 import ForumLogin from './components/ForumLogin'
@@ -14,9 +14,34 @@ import ThreadView from './components/ThreadView'
 import Footer from './components/Footer'
 import './styles.css'
 
+function applyTabSettings() {
+  const title = localStorage.getItem('siteTitle') || 'TerraTalk';
+  const tagline = localStorage.getItem('siteTagline') || 'Your world. Your voice.';
+  document.title = `${title} - ${tagline}`;
+
+  let link = document.querySelector("link[rel~='icon']");
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'icon';
+    document.head.appendChild(link);
+  }
+  const logoUrl = localStorage.getItem('siteLogoUrl');
+  if (logoUrl) {
+    link.href = logoUrl;
+  } else {
+    link.removeAttribute('href');
+  }
+}
+
 export default function App() {
   const [darkMode, setDarkMode] = useState(false)
   const [view, setView] = useState({ page: 'home' })
+
+  useEffect(() => {
+    applyTabSettings();
+    window.addEventListener('siteSettingsChanged', applyTabSettings);
+    return () => window.removeEventListener('siteSettingsChanged', applyTabSettings);
+  }, [])
 
   function navigate(page, data = {}) {
     setView({ page, ...data })
