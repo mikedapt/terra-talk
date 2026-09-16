@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
 
+const API = 'http://localhost:3001/api';
+
 const COLOR_VARS = {
   'Backgrounds': [
     { var: '--bg-base',        label: 'Page Background',   light: '#dfded9', dark: '#111214' },
@@ -78,14 +80,17 @@ function buildHexDrafts(lightColors, darkColors) {
   return drafts;
 }
 
-export default function TermsOfService({ onNavigate }) {
+export default function AdminSettings({ onNavigate }) {
 
   const { user, token } = useAuth();
 
-  const [catform, setCatForm] = useState({ catname: "", catdesc: "", catauthor: user.id});
-  const [topform, setTopForm] = useState({ topname: "", topdesc: "", topcat: "", topicon: "💬", topcolor: "#4CAF50", topauthor: user.id});
+  const [catform, setCatForm] = useState({ catname: "", catdesc: ""});
+  const [topform, setTopForm] = useState({ topname: "", topdesc: "", topcat: "", topicon: "💬", topcolor: "#4CAF50"});
   const [categories, setCategories] = useState([]);
+  const [topics, setTopics] = useState([]);
   const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [quicklinks, setQuicklinks] = useState([]);
   const [qlform, setQlForm] = useState({ qltitle: '', qlicon: '📋', qllink: '' });
   const [qlStatus, setQlStatus] = useState('');
@@ -157,20 +162,45 @@ export default function TermsOfService({ onNavigate }) {
   //Load Categories to list in dropdown for add Topic
 
   useEffect(() => {
-    let cancelled = false;
+      let cancelled = false;
 
-    (async () => {
-      try {
-        const res = await fetch("http://localhost:3001/api/categories");
-        const data = await res.json();
-        if (!cancelled) setCategories(Array.isArray(data) ? data : []);
-      } catch {
-        if (!cancelled) setStatus("Could not load categories");
-      }
-    })();
+      (async () => {
+        try {
+          const [cats, tops] = await Promise.all([
+            fetch(`${API}/categories`).then(r => r.json()),
+            fetch(`${API}/topics`).then(r => r.json()),
+          ]);
+          if (cancelled) return;
+          setCategories(Array.isArray(cats) ? cats : []);
+          setTopics(Array.isArray(tops) ? tops : []);
+        } catch {
+          if (!cancelled) setError('Could not load categories and/or topics');
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      })();
+  
+      return () => { cancelled = true; };
+    }, []);
 
-    return () => { cancelled = true; };
-  }, []);
+
+  //useEffect(() => {
+    //let cancelled = false;
+
+    //(async () => {
+      //try {
+        //const res = await fetch("http://localhost:3001/api/categories");
+        //const data = await res.json();
+        //if (!cancelled) setCategories(Array.isArray(data) ? data : []);
+      //} catch {
+        //if (!cancelled) setStatus("Could not load categories");
+      //}
+    //})();
+
+    //return () => { cancelled = true; };
+  //}, []);
+
+
 
   // Apply any saved theme colors on mount
   useEffect(() => {
@@ -451,8 +481,12 @@ export default function TermsOfService({ onNavigate }) {
     setLogoStatus({ type: 'ok', text: 'Logo removed.' });
   };
 
+  
 
   if (user.username == 'admin') {
+
+      if (loading) return <p>Loading categories and topics...</p>;
+      if (error) return <p>Error: {error}</p>;
 
       return (
         <div className="page-content">
@@ -675,12 +709,6 @@ export default function TermsOfService({ onNavigate }) {
                                   placeholder="Enter the Category Description" autoComplete="catdesc" onChange={handleChange} required />
                           </div>
 
-                          <div className="form-group" id="hidden">
-                              <label htmlFor="catauthor"></label>
-                              <input type="number" id="catauthor" name="catauthor" value={catform.catauthor}
-                                  placeholder="Enter Author ID" autoComplete="catauthor" required />
-                          </div>
-
                           <button type="submit" className="btn">Add Category</button>
                           {status && <p className="form-status">{status}</p>}
 
@@ -755,12 +783,6 @@ export default function TermsOfService({ onNavigate }) {
                                     placeholder="#4CAF50" maxLength={7} spellCheck={false}
                                     aria-label="Accent color hex code" />
                               </div>
-                          </div>
-
-                          <div className="form-group" id="hidden">
-                              <label htmlFor="topauthor"></label>
-                              <input type="number" id="topauthor" name="topauthor" value={topform.topauthor}
-                                  placeholder="Enter Author ID" autoComplete="topauthor" required />
                           </div>
 
                           <button type="submit" className="btn">Add Topic</button>
