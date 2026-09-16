@@ -89,6 +89,10 @@ export default function AdminSettings({ onNavigate }) {
   const [categories, setCategories] = useState([]);
   const [topics, setTopics] = useState([]);
   const [status, setStatus] = useState("");
+  const [removeCatId, setRemoveCatId] = useState('');
+  const [removeCatStatus, setRemoveCatStatus] = useState('');
+  const [removeTopId, setRemoveTopId] = useState('');
+  const [removeTopStatus, setRemoveTopStatus] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quicklinks, setQuicklinks] = useState([]);
@@ -265,6 +269,45 @@ export default function AdminSettings({ onNavigate }) {
     }
   };
 
+
+  const handleRemoveCategory = async (e) => {
+    e.preventDefault();
+    if (!removeCatId) return;
+    try {
+      const res = await fetch(`${API}/categories/${removeCatId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) return setRemoveCatStatus(data.error || 'Something went wrong');
+      setCategories(prev => prev.filter(c => c.id !== Number(removeCatId)));
+      setTopics(prev => prev.filter(t => t.category_id !== Number(removeCatId)));
+      setRemoveCatId('');
+      setRemoveCatStatus('Category removed!');
+      setTimeout(() => setRemoveCatStatus(''), 3000);
+    } catch {
+      setRemoveCatStatus('Network error');
+    }
+  };
+
+  const handleRemoveTopic = async (e) => {
+    e.preventDefault();
+    if (!removeTopId) return;
+    try {
+      const res = await fetch(`${API}/topics/${removeTopId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) return setRemoveTopStatus(data.error || 'Something went wrong');
+      setTopics(prev => prev.filter(t => t.id !== Number(removeTopId)));
+      setRemoveTopId('');
+      setRemoveTopStatus('Topic removed!');
+      setTimeout(() => setRemoveTopStatus(''), 3000);
+    } catch {
+      setRemoveTopStatus('Network error');
+    }
+  };
 
   const handleAddQuicklink = async (e) => {
     e.preventDefault();
@@ -690,8 +733,7 @@ export default function AdminSettings({ onNavigate }) {
                         <h2><b> Add / Remove Categories </b></h2>
                         <br></br>
                         <p> Categories are the Green Section Names on the Home Page (ie.. INFORMATION, GAMEPLAY, COMMUNITY).
-                          From here you are able to add / remove categories. If you choose to remove a category on the backend, be sure to remove any rows under it in other tables
-                          (topics, threads, posts) </p>
+                          From here you are able to add / remove categories. Removing a category will also remove all its topics, threads, and posts. </p>
                         <br></br>
                         <p> + Add Categories </p>
 
@@ -716,15 +758,35 @@ export default function AdminSettings({ onNavigate }) {
 
                         <br></br>
                         <p> - Remove Categories </p>
+
+                        <form onSubmit={handleRemoveCategory} noValidate>
+                          <div className="form-group">
+                            <label htmlFor="removeCat">Select Category</label>
+                            <select
+                              id="removeCat"
+                              value={removeCatId}
+                              onChange={e => setRemoveCatId(e.target.value)}
+                              required
+                            >
+                              <option value="" disabled>
+                                {categories.length ? 'Choose a category' : 'No categories yet'}
+                              </option>
+                              {categories.map(cat => (
+                                <option key={cat.id} value={cat.id}>{capitalize(cat.name)}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <button type="submit" className="btn" disabled={!removeCatId}>Remove Category</button>
+                          {removeCatStatus && <p className="form-status">{removeCatStatus}</p>}
+                        </form>
+
                         <br></br>
                         <hr></hr>
                         <br></br>
                         <h2><b> Add / Remove Topics </b></h2>
                         <br></br>
-                        <p> Topics are the white Sections assigned to a category on the Home Page (ie.. Announcements, Rules & Guidelines, General Discussion, etc...).
-                          From here you are able to add / remove topics. If you choose to remove a topic on the backend, be sure to remove any rows under it in other tables
-                          (threads, posts)
-                        </p>
+                        <p> Topics are the white Sections assigned to a category on the Home Page (ie.. Announcements, Rules &amp; Guidelines, General Discussion, etc...).
+                          From here you are able to add / remove topics. Removing a topic will also remove all its threads and posts. </p>
                         <br></br>
                         <p> + Add Topics </p>
 
@@ -792,10 +854,31 @@ export default function AdminSettings({ onNavigate }) {
 
                         <br></br>
                         <p> - Remove Topics </p>
+
+                        <form onSubmit={handleRemoveTopic} noValidate>
+                          <div className="form-group">
+                            <label htmlFor="removeTopic">Select Topic</label>
+                            <select
+                              id="removeTopic"
+                              value={removeTopId}
+                              onChange={e => setRemoveTopId(e.target.value)}
+                              required
+                            >
+                              <option value="" disabled>
+                                {topics.length ? 'Choose a topic' : 'No topics yet'}
+                              </option>
+                              {topics.map(top => (
+                                <option key={top.id} value={top.id}>{capitalize(top.name)}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <button type="submit" className="btn" disabled={!removeTopId}>Remove Topic</button>
+                          {removeTopStatus && <p className="form-status">{removeTopStatus}</p>}
+                        </form>
+
                         <br></br>
                         <hr></hr>
                         <br></br>
-
 
                         <button className="btn-submit-reply" onClick={() => onNavigate('home')}>Return to Homepage</button>
                     </div>

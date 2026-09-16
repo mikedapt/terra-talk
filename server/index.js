@@ -377,6 +377,12 @@ app.post('/api/categories', authRequired, adminRequired, (req, res) => {
 //  res.json({ id: info.lastInsertRowid });
 //});
 
+app.delete('/api/categories/:id', authRequired, adminRequired, (req, res) => {
+  const result = db.prepare('DELETE FROM categories WHERE id = ?').run(req.params.id);
+  if (result.changes === 0) return res.status(404).json({ error: 'Category not found' });
+  res.json({ ok: true });
+});
+
 // --- Topics ---
 //app.get('/api/categories/:id/topics', (req, res) => {
 //  const rows = db.prepare(`
@@ -402,6 +408,12 @@ app.post('/api/topics', authRequired, adminRequired, (req, res) => {
     .prepare('INSERT INTO topics (category_id, name, icon, title, description, accentColor, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)')
     .run(topcat, topname, topicon, topname, topdesc, topcolor, req.user.id);
   res.status(201).json({ id: info.lastInsertRowid });
+});
+
+app.delete('/api/topics/:id', authRequired, adminRequired, (req, res) => {
+  const result = db.prepare('DELETE FROM topics WHERE id = ?').run(req.params.id);
+  if (result.changes === 0) return res.status(404).json({ error: 'Topic not found' });
+  res.json({ ok: true });
 });
 
 //app.post('/api/categories/:id/topics', authRequired, (req, res) => {
