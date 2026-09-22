@@ -4,8 +4,8 @@ import { useAuth } from '../AuthContext';
 
 export default function ThreadView({ thread, topic, onNavigate }) {
 
-  const { user } = useAuth();
-  const [form, setForm] = useState({ postbody: "", postauthor: user.id, postthread: thread.id});
+  const { user, token } = useAuth();
+  const [form, setForm] = useState({ postbody: "", postthread: thread.id});
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -39,8 +39,10 @@ export default function ThreadView({ thread, topic, onNavigate }) {
     try {
       const res = await fetch("http://localhost:3001/api/newpost", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postbody: form.postbody, postauthor: user.id, postthread: thread.id }),
+        headers: { "Content-Type": "application/json",
+                   Authorization: `Bearer ${token}`,
+         },
+        body: JSON.stringify({ postbody: form.postbody, postthread: thread.id }),
       });
 
       const text = await res.text();
@@ -91,9 +93,9 @@ export default function ThreadView({ thread, topic, onNavigate }) {
       </div>
 
       <div className="posts-list">
-          <div key={thread.id} className={`post-card ${thread.id === 0 ? 'post-op' : ''}`}>
+          <div key={thread.id} className='post-card post-op'>
             <div className="post-sidebar">
-              <div className="post-avatar">A</div>
+              <div className="post-avatar"><img src={`http://localhost:3001/profiles/${thread.profile_path}`}></img></div>
               <div className="post-author-name">{thread.username}</div>
               <div className="post-author-role">
                 {thread.username === 'admin' ? <span className="role-badge admin">Admin</span>
@@ -124,9 +126,9 @@ export default function ThreadView({ thread, topic, onNavigate }) {
 
       <div className="posts-list">
         {threadPosts.map((post, idx) => (
-          <div key={post.id} className={`post-card ${idx === 0 ? 'post-op' : ''}`}>
+          <div key={post.id} className='post-card'>
             <div className="post-sidebar">
-              <div className="post-avatar">[Profle]</div>
+              <div className="post-avatar"><img src={`http://localhost:3001/profiles/${post.profile_path}`}></img></div>
               <div className="post-author-name">{post.username}</div>
               <div className="post-author-role">
                 {post.username === 'admin' ? <span className="role-badge admin">Admin</span>

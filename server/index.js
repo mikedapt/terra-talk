@@ -488,16 +488,16 @@ app.get('/api/posts',  (req, res) => {
 
 app.post('/api/newpost', authRequired, async (req, res) => {
 
-  const { postbody, postauthor, postthread } = req.body;
+  const { postbody, postthread } = req.body;
   const getthreadid = db.prepare('SELECT id FROM threads WHERE id = ?').get(postthread);
 
   //console.log(threadtitle, threadbody, threadauthor, threadtopic);
 
   if ( !getthreadid ) {
-     return res.status(401).json({ error: 'ERROR: Invalid Thread' });
+     return res.status(401).json({ error: 'ERROR: Invalid Post' });
   } else {
      // console.log(gettopicid.id);
-     const rows = db.prepare('INSERT INTO posts (thread_id, user_id, body) VALUES (?, ?, ?)').run(getthreadid.id, postauthor, postbody);
+     const rows = db.prepare('INSERT INTO posts (thread_id, user_id, body) VALUES (?, ?, ?)').run(getthreadid.id, req.user.id, postbody);
      res.status(201).json(rows);
 
   }
