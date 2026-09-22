@@ -100,6 +100,21 @@ export default function CategoryView({ topic, onNavigate }) {
 }
 
 function ThreadRow({ thread, pinned, onClick }) {
+
+  const [counts, setPostCounts] = useState({ postcount: 0 });
+  const [viewCount, setViewCount] = useState(null);
+
+  useEffect(() => {
+    fetch(`http://localhost:3001/api/postquery?thread_id=${thread.id}`)
+      .then(r => r.json())
+      .then(data => setPostCounts(data));
+
+    fetch(`http://localhost:3001/api/viewquery?thread_id=${thread.id}`)
+      .then(r => r.json())
+      .then(data => setViewCount(data.viewcount))
+      .catch(() => {});
+  }, [thread.id]);
+
   return (
     <div className={`thread-row ${pinned ? 'thread-pinned' : ''}`} onClick={onClick} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onClick()}>
       <div className="thread-col-main">
@@ -116,10 +131,10 @@ function ThreadRow({ thread, pinned, onClick }) {
         </div>
       </div>
       <div className="thread-col-stats">
-        <span className="thread-stat-num">{thread.replies}</span>
+        <span className="thread-stat-num">{counts.postcount}</span>
       </div>
       <div className="thread-col-stats">
-        <span className="thread-stat-num">[insert thread views here]</span>
+        <span className="thread-stat-num">{viewCount !== null ? viewCount : '–'}</span>
       </div>
       <div className="thread-col-last">
         <div className="last-post-author">{thread.username}</div>

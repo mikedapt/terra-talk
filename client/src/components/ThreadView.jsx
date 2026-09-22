@@ -10,6 +10,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [status, setStatus] = useState(null);
+  const [viewCount, setViewCount] = useState(null);
 
 
   const loadPosts = async () => {
@@ -20,10 +21,29 @@ export default function ThreadView({ thread, topic, onNavigate }) {
   };
 
   useEffect(() => {
+    const controller = new AbortController();
+    const { signal } = controller;
+
     loadPosts()
       .catch(() => setStatus("Could not load posts"))
       .finally(() => setLoading(false));
-  }, []);
+
+    if (token) {
+      fetch("http://localhost:3001/api/thread-view", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ thread_id: thread.id }),
+        signal,
+      }).catch(() => {});
+    }
+
+    fetch(`http://localhost:3001/api/viewquery?thread_id=${thread.id}`, { signal })
+      .then(r => r.json())
+      .then(data => setViewCount(data.viewcount))
+      .catch(() => {});
+
+    return () => controller.abort();
+  }, [thread.id]);
 
 
   const threadPosts = posts.filter((p) => p.thread_id === thread.id);
@@ -88,7 +108,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
           {thread.pinned && <span className="pin-badge">📌 Pinned</span>}
           <span>{thread.replies} replies</span>
           <span>·</span>
-          <span>[thread views here]</span>
+          <span>{viewCount !== null ? viewCount.toLocaleString() : '–'} views</span>
         </div>
       </div>
 

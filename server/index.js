@@ -112,6 +112,20 @@ app.get('/api/threadpostquery', (req, res) => {
   res.json({ ...ThreadPostQuery.get(req.query.topic_id) });
 });
 
+// --- Thread / Post Count ---
+const PostQuery = db.prepare(`
+  SELECT
+    COUNT(p.id) AS postcount
+    FROM threads t
+    LEFT JOIN posts p ON p.thread_id = t.id
+    WHERE t.id = ?
+`);
+
+app.get('/api/postquery', (req, res) => {
+
+  res.json({ ...PostQuery.get(req.query.thread_id) });
+});
+
 
 // --- Latest Post ---
 const LatestPostQuery = db.prepare(`
@@ -521,6 +535,32 @@ app.post('/api/newpost', authRequired, async (req, res) => {
 //  ).run(req.params.id, req.user.id, body);
 //  res.json({ id: info.lastInsertRowid });
 //});
+
+// --- Thread Views ---
+const upsertView = db.prepare(`
+  INSERT INTO thread_views (thread_id, user_id, view_count, last_viewed_at)
+  VALUES (?, ?, 1, CURRENT_TIMESTAMP)
+  ON CONFLICT(thread_id, user_id) DO UPDATE SET
+    view_count = view_count + 1,
+    last_viewed_at = CURRENT_TIMESTAMP
+`);
+
+const viewCountQuery = db.prepare(`
+  SELECT COALESCE(SUM(view_count), 0) AS viewcount
+  FROM thread_views
+  WHERE thread_id = ?
+`);
+
+app.post('/api/thread-view', authRequired, (req, res) => {
+  const thread_id = parseInt(req.body.thread_id, 10);
+  if (!thread_id) return res.status(400).json({ error: 'thread_id required' });
+  upsertView.run(thread_id, req.user.id);
+  res.json({ ok: true });
+});
+
+app.get('/api/viewquery', (req, res) => {
+  res.json(viewCountQuery.get(req.query.thread_id));
+});
 
 // --- Quicklinks ---
 app.get('/api/quicklinks', (req, res) => {
