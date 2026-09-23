@@ -143,6 +143,20 @@ app.get('/api/latestpostquery', (req, res) => {
   res.json({ ...LatestPostQuery.get(req.query.topic_id) });
 });
 
+const LastPostQuery = db.prepare(`
+  SELECT
+     u.username AS author,
+     p.created_at AS time
+     FROM posts p
+     INNER JOIN users u ON p.user_id = u.id
+     WHERE p.thread_id = ? 
+     ORDER BY p.created_at LIMIT 1 `);
+
+app.get('/api/recentpostquery', (req, res) => {
+
+  res.json({ ...LastPostQuery.get(req.query.thread_id) });
+});
+
 
 
 // Uploader Variables

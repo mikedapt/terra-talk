@@ -71,6 +71,13 @@ function applyColorsToDOM(lightColors, darkColors) {
   tag.textContent = `.light {\n${toVars(lightColors)}\n}\n.dark {\n${toVars(darkColors)}\n}`;
 }
 
+const DEFAULT_FOOTER_LINKS = [
+  { label: 'Terms', url: 'terms' },
+  { label: 'Privacy', url: 'home' },
+  { label: 'Contact', url: 'home' },
+  { label: 'Discord', url: 'home' },
+];
+
 function buildHexDrafts(lightColors, darkColors) {
   const drafts = {};
   Object.values(COLOR_VARS).flat().forEach(({ var: v }) => {
@@ -105,6 +112,14 @@ export default function AdminSettings({ onNavigate }) {
   const [themeHexDrafts, setThemeHexDrafts] = useState(() => buildHexDrafts(loadSavedColors('light'), loadSavedColors('dark')));
   const [colorStatus, setColorStatus] = useState('');
   const [activeThemeTab, setActiveThemeTab] = useState('light');
+
+  const [footerLinks, setFooterLinks] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('footerLinks')) || DEFAULT_FOOTER_LINKS; }
+    catch { return DEFAULT_FOOTER_LINKS; }
+  });
+  const [flLabelDraft, setFlLabelDraft] = useState('');
+  const [flUrlDraft, setFlUrlDraft] = useState('');
+  const [footerStatus, setFooterStatus] = useState('');
 
   const [headerTitle, setHeaderTitle] = useState(() => localStorage.getItem('siteTitle') || 'TerraTalk');
   const [headerTagline, setHeaderTagline] = useState(() => localStorage.getItem('siteTagline') || 'Your world. Your voice.');
@@ -434,6 +449,34 @@ export default function AdminSettings({ onNavigate }) {
     setTimeout(() => setHeaderStatus(''), 3000);
   };
 
+  const handleAddFooterLink = () => {
+    const label = flLabelDraft.trim();
+    const url = flUrlDraft.trim();
+    if (!label || !url) return;
+    setFooterLinks(prev => [...prev, { label, url }]);
+    setFlLabelDraft('');
+    setFlUrlDraft('');
+  };
+
+  const handleRemoveFooterLink = (index) => {
+    setFooterLinks(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSaveFooterSettings = () => {
+    localStorage.setItem('footerLinks', JSON.stringify(footerLinks));
+    window.dispatchEvent(new Event('siteSettingsChanged'));
+    setFooterStatus('Footer settings saved!');
+    setTimeout(() => setFooterStatus(''), 3000);
+  };
+
+  const handleResetFooterSettings = () => {
+    setFooterLinks(DEFAULT_FOOTER_LINKS);
+    localStorage.removeItem('footerLinks');
+    window.dispatchEvent(new Event('siteSettingsChanged'));
+    setFooterStatus('Footer links reset to defaults!');
+    setTimeout(() => setFooterStatus(''), 3000);
+  };
+
   const handleSaveServerInfo = () => {
     localStorage.setItem('serverAddress', serverAddress);
     localStorage.setItem('serverVersions', JSON.stringify(serverVersions));
@@ -552,6 +595,7 @@ export default function AdminSettings({ onNavigate }) {
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-server').scrollIntoView({ behavior: 'smooth' })}>Server Info</button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-header').scrollIntoView({ behavior: 'smooth' })}>Header Settings</button>
+                          <button type="button" className="tag-btn" onClick={() => document.getElementById('section-footer').scrollIntoView({ behavior: 'smooth' })}>Footer Settings</button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-categories').scrollIntoView({ behavior: 'smooth' })}>Categories &amp; Topics</button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-quicklinks').scrollIntoView({ behavior: 'smooth' })}>Quicklinks </button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-ban').scrollIntoView({ behavior: 'smooth' })}>Ban Users</button>
@@ -725,6 +769,76 @@ export default function AdminSettings({ onNavigate }) {
                             {logoStatus.text}
                           </p>
                         )}
+                    </div>
+                  </div>
+
+                  <div id="section-footer" className="admin-card">
+                    <div className="admin-content">
+                        <h2><b> Footer Settings </b></h2>
+                        <br></br>
+                        <p> Manage the links shown in the bottom-right of the footer. Add custom links or remove existing ones. </p>
+                        <br></br>
+                        <hr></hr>
+                        <br></br>
+
+                        <p> Current Footer Links </p>
+                        <br></br>
+                        {footerLinks.length === 0 ? (
+                          <p>No footer links.</p>
+                        ) : (
+                          <ul className="quick-links">
+                            {footerLinks.map((link, i) => (
+                              <li key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <p>{link.label} — <span style={{ opacity: 0.65, fontSize: '0.85rem' }}>{link.url}</span></p>
+                                <button
+                                  type="button"
+                                  className="btn"
+                                  onClick={() => handleRemoveFooterLink(i)}
+                                  style={{ padding: '0.2rem 0.6rem', fontSize: '0.8rem' }}
+                                >Remove</button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                        <br></br>
+                        <hr></hr>
+                        <br></br>
+                        <p> + Add Footer Link </p>
+
+                        <div className="form-group">
+                          <label htmlFor="flLabel">Link Label</label>
+                          <input
+                            type="text"
+                            id="flLabel"
+                            value={flLabelDraft}
+                            onChange={e => setFlLabelDraft(e.target.value)}
+                            placeholder="e.g. Discord"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="flUrl">URL or Page Name</label>
+                          <input
+                            type="text"
+                            id="flUrl"
+                            value={flUrlDraft}
+                            onChange={e => setFlUrlDraft(e.target.value)}
+                            placeholder="https://... or page name (e.g. terms)"
+                          />
+                        </div>
+
+                        <button type="button" className="btn" onClick={handleAddFooterLink}>Add Link</button>
+                        <br></br>
+                        <br></br>
+                        <hr></hr>
+                        <br></br>
+
+                        <button type="button" className="btn" onClick={handleSaveFooterSettings}>Save Footer Settings</button>
+                        <br></br>
+                        <br></br>
+                        <button type="button" className="btn" onClick={handleResetFooterSettings}>Restore Defaults</button>
+                        {footerStatus && <p className="form-status">{footerStatus}</p>}
                     </div>
                   </div>
 

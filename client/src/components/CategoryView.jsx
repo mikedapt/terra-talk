@@ -31,11 +31,13 @@ export default function CategoryView({ topic, onNavigate }) {
 
     return () => { cancelled = true; };
   }, []);
+  
 
   const topicThreads = threads.filter((t) => t.topic_id === topic.id);
 
   const pinnedThreads = topicThreads.filter((t) => t.is_pinned)
   const normalThreads = topicThreads.filter((t) => !t.is_pinned)
+
 
   //useEffect(() => {
     //api('/topics')
@@ -103,6 +105,7 @@ function ThreadRow({ thread, pinned, onClick }) {
 
   const [counts, setPostCounts] = useState({ postcount: 0 });
   const [viewCount, setViewCount] = useState(null);
+  const [recentpost, setRecentPost] = useState({ author: '', time: '' });
 
   useEffect(() => {
     fetch(`http://localhost:3001/api/postquery?thread_id=${thread.id}`)
@@ -113,6 +116,12 @@ function ThreadRow({ thread, pinned, onClick }) {
       .then(r => r.json())
       .then(data => setViewCount(data.viewcount))
       .catch(() => {});
+  }, [thread.id]);
+
+  useEffect(() => {
+    fetch(`http://localhost:3001/api/recentpostquery?thread_id=${thread.id}`)
+      .then(r => r.json())
+      .then(data => setRecentPost(data));
   }, [thread.id]);
 
   return (
@@ -137,8 +146,8 @@ function ThreadRow({ thread, pinned, onClick }) {
         <span className="thread-stat-num">{viewCount !== null ? viewCount : '–'}</span>
       </div>
       <div className="thread-col-last">
-        <div className="last-post-author">{thread.username}</div>
-        <div className="last-post-time">{thread.created_at}</div>
+        <div className="last-post-author">{recentpost.author}</div>
+        <div className="last-post-time">{recentpost.time}</div>
       </div>
     </div>
   )
