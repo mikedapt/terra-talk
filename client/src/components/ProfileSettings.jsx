@@ -1,15 +1,22 @@
 import { useState, useRef } from 'react'
-import { api } from '../api';
 import { useAuth } from '../AuthContext';
 
 export default function ProfileSettings({ onNavigate }) {
 
-  const { user, setUser} = useAuth();
+  const { user, setUser } = useAuth();
 
   const fileInputRef = useRef(null);
-  const [preview, setPreview] = useState(null);   // local object URL, shown while uploading
-  const [status, setStatus] = useState(null);     // { type: 'ok' | 'error', text: string }
+  const [preview, setPreview] = useState(null);
+  const [status, setStatus] = useState(null);
   const [uploading, setUploading] = useState(false);
+
+  const [newUsername, setNewUsername] = useState('');
+  const [usernameStatus, setUsernameStatus] = useState(null);
+  const [usernameLoading, setUsernameLoading] = useState(false);
+
+  const [newEmail, setNewEmail] = useState('');
+  const [emailStatus, setEmailStatus] = useState(null);
+  const [emailLoading, setEmailLoading] = useState(false);
 
   async function handleFileChange(e) {
     const file = e.target.files?.[0];
@@ -22,12 +29,10 @@ export default function ProfileSettings({ onNavigate }) {
 
     try {
       const form = new FormData();
-      form.append('avatar', file);   // must match avatarUpload.single('avatar')
+      form.append('avatar', file);
 
       const res = await fetch('http://localhost:3001/api/me/avatar', {
         method: 'POST',
-        // Do NOT set Content-Type here — the browser adds the multipart
-        // boundary itself, and overriding it breaks the upload.
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         body: form,
       });
@@ -35,7 +40,6 @@ export default function ProfileSettings({ onNavigate }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed. Try again.');
 
-      // Update the logged-in user so the avatar refreshes everywhere at once
       setUser(prev => ({ ...prev, profile_path: data.profile_path }));
       setPreview(null);
       URL.revokeObjectURL(localUrl);
@@ -46,100 +50,179 @@ export default function ProfileSettings({ onNavigate }) {
       setStatus({ type: 'error', text: err.message });
     } finally {
       setUploading(false);
-      e.target.value = '';   // lets the user re-pick the same file
+      e.target.value = '';
+    }
+  }
+
+  async function handleUsernameChange() {
+    if (!newUsername.trim()) {
+      setUsernameStatus({ type: 'error', text: 'Please enter a new username.' });
+      return;
+    }
+    setUsernameLoading(true);
+    setUsernameStatus(null);
+    try {
+      const res = await fetch('http://localhost:3001/api/me/username', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ username: newUsername.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update username.');
+      localStorage.setItem('token', data.token);
+      setUser(prev => ({ ...prev, username: data.username }));
+      setNewUsername('');
+      setUsernameStatus({ type: 'ok', text: 'Username updated successfully.' });
+    } catch (err) {
+      setUsernameStatus({ type: 'error', text: err.message });
+    } finally {
+      setUsernameLoading(false);
+    }
+  }
+
+  async function handleEmailChange() {
+    if (!newEmail.trim()) {
+      setEmailStatus({ type: 'error', text: 'Please enter a new email.' });
+      return;
+    }
+    setEmailLoading(true);
+    setEmailStatus(null);
+    try {
+      const res = await fetch('http://localhost:3001/api/me/email', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ email: newEmail.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update email.');
+      setNewEmail('');
+      setEmailStatus({ type: 'ok', text: 'Email updated successfully.' });
+    } catch (err) {
+      setEmailStatus({ type: 'error', text: err.message });
+    } finally {
+      setEmailLoading(false);
     }
   }
 
   const avatarSrc = preview
     ?? (user?.profile_path ? `http://localhost:3001/profiles/${user.profile_path}` : null);
 
+  return (
+    <div className="page-content">
 
-    return (
-      <div className="page-content">
+      <div className="profile-card">
+        <div className="profile-header">
 
-                <div className="profile-card">
-                  <div className="profile-header">
+          <h1 className="general-heading">Profile Settings</h1>
+          <hr />
+          <br />
 
-                      <h1 className="general-heading">Profile Settings</h1>
-                      <hr></hr>
-                      <br></br>
-
-                      <div className="avatar-backdrop">
-                        {avatarSrc && (
-                          <img className="avatar-portrait" src={avatarSrc} alt={`${user?.username ?? 'Your'} profile picture`} />
-                        )}
-                      </div>
-
-                      <br></br>
-
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept="image/png, image/jpeg, image/webp, image/gif"
-                        onChange={handleFileChange}
-                        style={{ display: 'none' }}
-                      />
-
-                      <button
-                        className="btn-submit-reply"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploading}
-                      >
-                        {uploading ? 'Uploading…' : 'Change picture'}
-                      </button>
-
-                      {status && (
-                        <p style={{ color: status.type === 'error' ? '#c0392b' : '#2e7d32' }}>
-                          {status.text}
-                        </p>
-                      )}
-
-                      <br></br>
-                      <br></br>
-                      <hr></hr>
-                      <br></br>
-                  </div>
-                </div>
-
-                <div className="profile-card">
-                  <div className="profile-content">
-                      <h2><b> Add / Remove Categories </b></h2>
-                      <br></br>
-                      <p> Categories are the Green Section Names on the Home Page (ie.. INFORMATION, GAMEPLAY, COMMUNITY). 
-                        From here you are able to add / remove categories. If you choose to remove a category on the backend, be sure to remove any rows under it in other tables
-                        (topics, threads, posts) </p>
-                      <br></br>
-                      <p> + Add Categories </p>
-
-                      
-
-                      <br></br>
-                      <p> - Remove Categories </p>
-                      <br></br>
-                      <hr></hr>
-                      <br></br>
-                      <h2><b> Add / Remove Topics </b></h2>
-                      <br></br>
-                      <p> Topics are the white Sections assigned to a category on the Home Page (ie.. Announcements, Rules & Guidelines, General Discussion, etc...).
-                        From here you are able to add / remove topics. If you choose to remove a topic on the backend, be sure to remove any rows under it in other tables
-                        (threads, posts)
-                      </p>
-                      <br></br>
-                      <hr></hr>
-                      <br></br>
-                      <h2><b> Ban Users from Forum</b></h2>
-                      <br></br>
-                      <p> Here you will be able to ban Specific Users from Interacting on the Forums </p>
-                      <br></br>
-                      <hr></hr>
-                      <br></br>
-
-
-                      <button className="btn-submit-reply" onClick={() => onNavigate('home')}>Return to Homepage</button>
-                  </div>
-                </div>
-
+          <div className="avatar-backdrop">
+            {avatarSrc && (
+              <img className="avatar-portrait" src={avatarSrc} alt={`${user?.username ?? 'Your'} profile picture`} />
+            )}
           </div>
-    )
-  
+
+          <br />
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/png, image/jpeg, image/webp, image/gif"
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
+          />
+
+          <button
+            className="btn-submit-reply"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            {uploading ? 'Uploading…' : 'Change picture'}
+          </button>
+
+          {status && (
+            <p style={{ color: status.type === 'error' ? '#c0392b' : '#2e7d32' }}>
+              {status.text}
+            </p>
+          )}
+
+          <br /><br />
+          <hr />
+          <br />
+        </div>
+      </div>
+
+      <div className="profile-card">
+        <div className="profile-content">
+
+          <h2>Change Username</h2>
+          <br />
+          <div className="form-group">
+            <label>New Username</label>
+            <input
+              type="text"
+              value={newUsername}
+              onChange={e => setNewUsername(e.target.value)}
+              placeholder={user?.username ?? ''}
+            />
+          </div>
+          <button
+            className="btn-submit-reply"
+            onClick={handleUsernameChange}
+            disabled={usernameLoading}
+          >
+            {usernameLoading ? 'Saving…' : 'Update Username'}
+          </button>
+          {usernameStatus && (
+            <p style={{ color: usernameStatus.type === 'error' ? '#c0392b' : '#2e7d32', marginTop: '8px' }}>
+              {usernameStatus.text}
+            </p>
+          )}
+
+          <br /><br />
+          <hr />
+          <br />
+
+          <h2>Change Email</h2>
+          <br />
+          <div className="form-group">
+            <label>New Email</label>
+            <input
+              type="email"
+              value={newEmail}
+              onChange={e => setNewEmail(e.target.value)}
+              placeholder="Enter new email"
+            />
+          </div>
+          <button
+            className="btn-submit-reply"
+            onClick={handleEmailChange}
+            disabled={emailLoading}
+          >
+            {emailLoading ? 'Saving…' : 'Update Email'}
+          </button>
+          {emailStatus && (
+            <p style={{ color: emailStatus.type === 'error' ? '#c0392b' : '#2e7d32', marginTop: '8px' }}>
+              {emailStatus.text}
+            </p>
+          )}
+
+          <br /><br />
+          <hr />
+          <br />
+
+          <button className="btn-submit-reply" onClick={() => onNavigate('home')}>Return to Homepage</button>
+
+        </div>
+      </div>
+
+    </div>
+  );
 }

@@ -240,6 +240,25 @@ app.get('/api/me', authRequired, (req, res) => {
 
 
 
+app.patch('/api/me/username', authRequired, (req, res) => {
+  const username = req.body.username?.trim();
+  if (!username) return res.status(400).json({ error: 'Username is required.' });
+  const taken = db.prepare('SELECT id FROM users WHERE username = ? AND id != ?').get(username, req.user.id);
+  if (taken) return res.status(400).json({ error: 'Username is already taken.' });
+  db.prepare('UPDATE users SET username = ? WHERE id = ?').run(username, req.user.id);
+  const token = jwt.sign({ id: req.user.id, username }, JWT_SECRET);
+  res.json({ token, username });
+});
+
+app.patch('/api/me/email', authRequired, (req, res) => {
+  const email = req.body.email?.trim();
+  if (!email) return res.status(400).json({ error: 'Email is required.' });
+  const taken = db.prepare('SELECT id FROM users WHERE email = ? AND id != ?').get(email, req.user.id);
+  if (taken) return res.status(400).json({ error: 'Email is already in use.' });
+  db.prepare('UPDATE users SET email = ? WHERE id = ?').run(email, req.user.id);
+  res.json({ email });
+});
+
 app.post('/api/me/avatar', authRequired, avatarUpload.single('avatar'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No image was uploaded.' });
  
