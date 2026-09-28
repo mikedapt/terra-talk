@@ -1560,3 +1560,55 @@ a {
 .form-status {
   color: var(--text-secondary);
 }
+
+/* ─── Member List ─────────────────────────────────────────────── */
+.member-row {
+  display: grid;
+  grid-template-columns: 56px 1fr 200px;
+  align-items: center;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-light);
+  transition: background 0.15s;
+}
+
+.member-row:last-child { border-bottom: none; }
+.member-row:hover { background: var(--bg-hover); }
+
+.member-avatar-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0;
+}
+
+
+.member-info {
+  padding: 14px 16px;
+}
+
+.member-username {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--accent);
+}
+
+.member-joined {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 14px 16px;
+  border-left: 1px solid var(--border-light);
+}
+
+.member-joined-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.member-joined-date {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}

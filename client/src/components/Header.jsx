@@ -83,7 +83,7 @@ export default function Header({ darkMode, toggleDark, onNavigate }) {
 
         <nav className="header-nav">
           <button className="nav-link" onClick={() => onNavigate('home')}>Home</button>
-          <button className="nav-link">Members</button>
+          <button className="nav-link" onClick={() => onNavigate('memberpage')}>Members</button>
           <button className="nav-link">Search</button>
         </nav>
 

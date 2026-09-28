@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
 
-export default function TermsOfService({ onNavigate }) {
+export default function ProfileSettings({ onNavigate }) {
 
   const { user, setUser} = useAuth();
 

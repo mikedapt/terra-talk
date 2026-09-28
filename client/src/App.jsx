@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import Header from './components/Header'
+import MemberPage from './components/MemberPage'
 import ForumHome from './components/ForumHome'
 import ForumLogin from './components/ForumLogin'
 import ForumRegister from './components/ForumRegister'
-import AdminSettings from './components/AdminSettings';
-import ProfileSettings from './components/ProfileSettings';
+import AdminSettings from './components/AdminSettings'
+import ProfileSettings from './components/ProfileSettings'
 import ForgotPassword from './components/ForgotPassword'
 import PasswordReset from './components/PasswordReset'
 import TermsOfService from './components/TermsOfService'
@@ -55,6 +56,7 @@ export default function App() {
       {view.page === 'home' && <ForumHome onNavigate={navigate} />}
       {view.page === 'login' && <ForumLogin onNavigate={navigate} />}
       {view.page === 'register' && <ForumRegister onNavigate={navigate} />}
+      {view.page === 'memberpage' && <MemberPage onNavigate={navigate} />}
       {view.page === 'adminsettings' && <AdminSettings onNavigate={navigate} />}
       {view.page === 'profilesettings' && <ProfileSettings onNavigate={navigate} />}
       {view.page === 'forgotpwd' && <ForgotPassword onNavigate={navigate} />}

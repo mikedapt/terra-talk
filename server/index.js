@@ -617,6 +617,12 @@ app.post('/api/quicklinks/reset', authRequired, adminRequired, (req, res) => {
   res.json(rows);
 });
 
+// --- Members ---
+app.get('/api/members', authRequired, (req, res) => {
+  const rows = db.prepare('SELECT id, username, profile_path, created_at FROM users ORDER BY created_at ASC').all();
+  res.json(rows);
+});
+
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     return res.status(400).json({
