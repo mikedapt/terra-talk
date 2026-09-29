@@ -12,6 +12,8 @@ import TermsOfService from './components/TermsOfService'
 import CategoryView from './components/CategoryView'
 import CreateNewThread from './components/CreateNewThread'
 import ThreadView from './components/ThreadView'
+import SearchPage from './components/SearchPage'
+import MemberProfile from './components/MemberProfile'
 import Footer from './components/Footer'
 import './styles.css'
 
@@ -65,6 +67,8 @@ export default function App() {
       {view.page === 'topic' && <CategoryView topic={view.topic} onNavigate={navigate} />}
       {view.page === 'newthread' && <CreateNewThread topic={view.topic} onNavigate={navigate} />}
       {view.page === 'thread' && <ThreadView thread={view.thread} topic={view.topic} onNavigate={navigate} />}
+      {view.page === 'search' && <SearchPage onNavigate={navigate} />}
+      {view.page === 'memberprofile' && <MemberProfile memberId={view.memberId} onNavigate={navigate} />}
 
       <Footer onNavigate={navigate} />
     </div>

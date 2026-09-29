@@ -642,6 +642,54 @@ app.get('/api/members', authRequired, (req, res) => {
   res.json(rows);
 });
 
+app.get('/api/members/:id', authRequired, (req, res) => {
+  const member = db.prepare('SELECT id, username, profile_path, created_at FROM users WHERE id = ?').get(req.params.id);
+  if (!member) return res.status(404).json({ error: 'Member not found' });
+  res.json(member);
+});
+
+// --- Search ---
+app.get('/api/search', authRequired, (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (q.length < 2) return res.status(400).json({ error: 'Query must be at least 2 characters.' });
+  const like = `%${q}%`;
+
+  const topics = db.prepare(`
+    SELECT id, name, icon, title, description, accentColor
+    FROM topics WHERE name LIKE ? OR description LIKE ?
+  `).all(like, like);
+
+  const threads = db.prepare(`
+    SELECT t.id, t.title, t.body, t.topic_id, t.created_at,
+           tp.name AS topic_name, tp.icon AS topic_icon, tp.accentColor AS topic_accentColor,
+           u.username, u.profile_path
+    FROM threads t
+    JOIN users u ON t.user_id = u.id
+    JOIN topics tp ON t.topic_id = tp.id
+    WHERE t.title LIKE ? OR t.body LIKE ?
+  `).all(like, like);
+
+  const posts = db.prepare(`
+    SELECT p.id, p.body, p.thread_id,
+           t.title AS thread_title, t.body AS thread_body, t.created_at AS thread_created_at,
+           t.topic_id, tp.name AS topic_name, tp.icon AS topic_icon, tp.accentColor AS topic_accentColor,
+           p_author.username AS username,
+           t_author.username AS thread_username, t_author.profile_path AS thread_profile_path
+    FROM posts p
+    JOIN users p_author ON p.user_id = p_author.id
+    JOIN threads t ON p.thread_id = t.id
+    JOIN users t_author ON t.user_id = t_author.id
+    JOIN topics tp ON t.topic_id = tp.id
+    WHERE p.body LIKE ?
+  `).all(like);
+
+  const members = db.prepare(`
+    SELECT id, username, profile_path FROM users WHERE username LIKE ?
+  `).all(like);
+
+  res.json({ topics, threads, posts, members });
+});
+
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     return res.status(400).json({
