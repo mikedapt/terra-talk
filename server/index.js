@@ -217,10 +217,12 @@ function authRequired(req, res, next) {
   if (!token) return res.status(401).json({ error: 'Missing token' });
   try {
     req.user = jwt.verify(token, JWT_SECRET);
-    next();
   } catch {
-    res.status(401).json({ error: 'Invalid token' });
+    return res.status(401).json({ error: 'Invalid token' });
   }
+  const ban = db.prepare('SELECT reason FROM bans WHERE user_id = ?').get(req.user.id);
+  if (ban) return res.status(403).json({ error: 'banned', reason: ban.reason });
+  next();
 }
 
 function adminRequired(req, res, next) {
@@ -385,6 +387,8 @@ app.post('/api/login', async (req, res) => {
   if (!user || !(await bcrypt.compare(password, user.password_hash))) {
      return res.status(401).json({ error: 'Invalid credentials' });
   }
+  const ban = db.prepare('SELECT reason FROM bans WHERE user_id = ?').get(user.id);
+  if (ban) return res.status(403).json({ error: 'banned', reason: ban.reason });
   const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
   res.json({ token, user: { id: user.id, username: user.username, profile_path: user.profile_path } });
   console.log("login success!");
@@ -733,6 +737,99 @@ app.post('/api/post-likes', authRequired, (req, res) => {
   }
   const { count } = db.prepare('SELECT COUNT(*) AS count FROM post_likes WHERE post_id = ?').get(post_id);
   res.json({ liked: !alreadyLiked, count });
+});
+
+// --- Bans ---
+app.get('/api/admin/bans', authRequired, adminRequired, (req, res) => {
+  const rows = db.prepare(`
+    SELECT b.user_id, b.reason, b.banned_at, u.username
+    FROM bans b JOIN users u ON u.id = b.user_id
+    ORDER BY b.banned_at DESC
+  `).all();
+  res.json(rows);
+});
+
+app.post('/api/admin/bans', authRequired, adminRequired, (req, res) => {
+  const { user_id, reason } = req.body;
+  if (!user_id) return res.status(400).json({ error: 'user_id required' });
+  db.prepare('INSERT OR REPLACE INTO bans (user_id, reason) VALUES (?, ?)').run(user_id, reason || '');
+  res.json({ ok: true });
+});
+
+app.delete('/api/admin/bans/:user_id', authRequired, adminRequired, (req, res) => {
+  db.prepare('DELETE FROM bans WHERE user_id = ?').run(req.params.user_id);
+  res.json({ ok: true });
+});
+
+// --- Reports ---
+app.post('/api/reports', authRequired, (req, res) => {
+  const { target_type, target_id } = req.body;
+  if (!target_type || !target_id) return res.status(400).json({ error: 'target_type and target_id required' });
+  const existing = db.prepare('SELECT id FROM reports WHERE reporter_id = ? AND target_type = ? AND target_id = ?')
+    .get(req.user.id, target_type, target_id);
+  if (existing) {
+    db.prepare('DELETE FROM reports WHERE reporter_id = ? AND target_type = ? AND target_id = ?')
+      .run(req.user.id, target_type, target_id);
+  } else {
+    db.prepare('INSERT OR IGNORE INTO reports (reporter_id, target_type, target_id) VALUES (?, ?, ?)')
+      .run(req.user.id, target_type, target_id);
+  }
+  const { count } = db.prepare('SELECT COUNT(*) AS count FROM reports WHERE target_type = ? AND target_id = ?')
+    .get(target_type, target_id);
+  res.json({ reported: !existing, count });
+});
+
+app.get('/api/reports', optionalAuth, (req, res) => {
+  const thread_id = parseInt(req.query.thread_id, 10);
+  if (!thread_id) return res.status(400).json({ error: 'thread_id required' });
+  const uid = req.user?.id ?? 0;
+
+  const threadRow = db.prepare(`
+    SELECT COUNT(*) AS count,
+           MAX(CASE WHEN reporter_id = ? THEN 1 ELSE 0 END) AS hasReported
+    FROM reports WHERE target_type = 'thread' AND target_id = ?
+  `).get(uid, thread_id);
+
+  const postRows = db.prepare(`
+    SELECT p.id AS post_id,
+           COUNT(r.reporter_id) AS count,
+           MAX(CASE WHEN r.reporter_id = ? THEN 1 ELSE 0 END) AS hasReported
+    FROM posts p
+    LEFT JOIN reports r ON r.target_type = 'post' AND r.target_id = p.id
+    WHERE p.thread_id = ?
+    GROUP BY p.id
+  `).all(uid, thread_id);
+
+  const posts = {};
+  for (const row of postRows) posts[row.post_id] = { count: row.count, hasReported: !!row.hasReported };
+  res.json({ thread: { count: threadRow.count, hasReported: !!threadRow.hasReported }, posts });
+});
+
+app.get('/api/admin/reports', authRequired, adminRequired, (req, res) => {
+  const threads = db.prepare(`
+    SELECT 'thread' AS type, t.id, t.title AS label, u.username AS author, COUNT(r.id) AS count
+    FROM reports r
+    JOIN threads t ON t.id = r.target_id AND r.target_type = 'thread'
+    JOIN users u ON u.id = t.user_id
+    GROUP BY t.id ORDER BY count DESC
+  `).all();
+
+  const posts = db.prepare(`
+    SELECT 'post' AS type, p.id, SUBSTR(p.body, 1, 80) AS label, u.username AS author, COUNT(r.id) AS count
+    FROM reports r
+    JOIN posts p ON p.id = r.target_id AND r.target_type = 'post'
+    JOIN users u ON u.id = p.user_id
+    GROUP BY p.id ORDER BY count DESC
+  `).all();
+
+  res.json([...threads, ...posts].sort((a, b) => b.count - a.count));
+});
+
+app.delete('/api/admin/reports/:type/:id', authRequired, adminRequired, (req, res) => {
+  const { type, id } = req.params;
+  if (!['thread', 'post'].includes(type)) return res.status(400).json({ error: 'Invalid type' });
+  db.prepare('DELETE FROM reports WHERE target_type = ? AND target_id = ?').run(type, id);
+  res.json({ ok: true });
 });
 
 // --- Search ---

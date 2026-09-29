@@ -908,6 +908,20 @@ button { cursor: pointer; font-family: inherit; }
   border-color: var(--accent);
 }
 
+.post-action.reported,
+.post-action.reported:hover {
+  background: #fff3f3;
+  color: #c0392b;
+  border-color: #c0392b;
+}
+
+.dark .post-action.reported,
+.dark .post-action.reported:hover {
+  background: #2a1010;
+  color: #e05555;
+  border-color: #e05555;
+}
+
 .post-action:disabled {
   cursor: default;
   opacity: 0.75;

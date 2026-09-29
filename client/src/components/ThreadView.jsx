@@ -13,6 +13,8 @@ export default function ThreadView({ thread, topic, onNavigate }) {
   const [viewCount, setViewCount] = useState(null);
   const [threadLike, setThreadLike] = useState({ count: 0, hasLiked: false });
   const [postLikes, setPostLikes] = useState({});
+  const [threadReport, setThreadReport] = useState({ count: 0, hasReported: false });
+  const [postReports, setPostReports] = useState({});
 
 
   const loadPosts = async () => {
@@ -32,11 +34,20 @@ export default function ThreadView({ thread, topic, onNavigate }) {
     setPostLikes(pl);
   };
 
+  const loadReports = async () => {
+    if (!token) return;
+    const data = await fetch(`http://localhost:3001/api/reports?thread_id=${thread.id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then(r => r.json());
+    setThreadReport(data.thread);
+    setPostReports(data.posts);
+  };
+
   useEffect(() => {
     const controller = new AbortController();
     const { signal } = controller;
 
-    Promise.all([loadPosts(), loadLikes()])
+    Promise.all([loadPosts(), loadLikes(), loadReports()])
       .catch(() => setStatus("Could not load posts"))
       .finally(() => setLoading(false));
 
@@ -92,6 +103,39 @@ export default function ThreadView({ thread, topic, onNavigate }) {
       const data = await res.json();
       setPostLikes(pl => ({ ...pl, [post_id]: { count: data.count, hasLiked: data.liked } }));
     } catch { setPostLikes(prev); }
+  };
+
+  const handleThreadReport = async () => {
+    if (!user) return;
+    const prev = threadReport;
+    setThreadReport(r => ({ count: r.hasReported ? r.count - 1 : r.count + 1, hasReported: !r.hasReported }));
+    try {
+      const res = await fetch('http://localhost:3001/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ target_type: 'thread', target_id: thread.id }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setThreadReport({ count: data.count, hasReported: data.reported });
+    } catch { setThreadReport(prev); }
+  };
+
+  const handlePostReport = async (post_id) => {
+    if (!user) return;
+    const prev = postReports;
+    const current = postReports[post_id] || { count: 0, hasReported: false };
+    setPostReports(pr => ({ ...pr, [post_id]: { count: current.hasReported ? current.count - 1 : current.count + 1, hasReported: !current.hasReported } }));
+    try {
+      const res = await fetch('http://localhost:3001/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ target_type: 'post', target_id: post_id }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setPostReports(pr => ({ ...pr, [post_id]: { count: data.count, hasReported: data.reported } }));
+    } catch { setPostReports(prev); }
   };
 
   const handleChange = (e) => {
@@ -187,7 +231,13 @@ export default function ThreadView({ thread, topic, onNavigate }) {
                   {threadLike.count > 0 ? `👍 ${threadLike.count}` : '👍 Like'}
                 </button>
                 <button className="post-action">💬 Quote</button>
-                <button className="post-action">🚩 Report</button>
+                <button
+                  className={`post-action${threadReport.hasReported ? ' reported' : ''}`}
+                  onClick={handleThreadReport}
+                  disabled={!user}
+                >
+                  {threadReport.count > 0 ? `🚩 ${threadReport.count}` : '🚩 Report'}
+                </button>
               </div>
             </div>
           </div>
@@ -226,7 +276,13 @@ export default function ThreadView({ thread, topic, onNavigate }) {
                   {postLikes[post.id]?.count > 0 ? `👍 ${postLikes[post.id].count}` : '👍 Like'}
                 </button>
                 <button className="post-action">💬 Quote</button>
-                <button className="post-action">🚩 Report</button>
+                <button
+                  className={`post-action${postReports[post.id]?.hasReported ? ' reported' : ''}`}
+                  onClick={() => handlePostReport(post.id)}
+                  disabled={!user}
+                >
+                  {postReports[post.id]?.count > 0 ? `🚩 ${postReports[post.id].count}` : '🚩 Report'}
+                </button>
               </div>
             </div>
           </div>

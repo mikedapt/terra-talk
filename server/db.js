@@ -117,6 +117,25 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_thread_likes_thread ON thread_likes(thread_id);
   CREATE INDEX IF NOT EXISTS idx_post_likes_post     ON post_likes(post_id);
+
+  CREATE TABLE IF NOT EXISTS bans (
+    user_id    INTEGER PRIMARY KEY,
+    reason     TEXT NOT NULL DEFAULT '',
+    banned_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS reports (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    reporter_id  INTEGER NOT NULL,
+    target_type  TEXT NOT NULL CHECK (target_type IN ('thread', 'post')),
+    target_id    INTEGER NOT NULL,
+    created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (reporter_id, target_type, target_id),
+    FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_reports_target ON reports(target_type, target_id);
 `);
 
 // Seed default quicklinks if table is empty

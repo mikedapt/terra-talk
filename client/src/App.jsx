@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useAuth } from './AuthContext'
 import Header from './components/Header'
 import MemberPage from './components/MemberPage'
 import ForumHome from './components/ForumHome'
@@ -37,6 +38,7 @@ function applyTabSettings() {
 }
 
 export default function App() {
+  const { banned } = useAuth();
   const [darkMode, setDarkMode] = useState(false)
   const [view, setView] = useState({ page: 'home' })
 
@@ -55,20 +57,32 @@ export default function App() {
     <div className={darkMode ? 'dark' : 'light'}>
       <Header darkMode={darkMode} toggleDark={() => setDarkMode((d) => !d)} onNavigate={navigate} />
 
-      {view.page === 'home' && <ForumHome onNavigate={navigate} />}
-      {view.page === 'login' && <ForumLogin onNavigate={navigate} />}
-      {view.page === 'register' && <ForumRegister onNavigate={navigate} />}
-      {view.page === 'memberpage' && <MemberPage onNavigate={navigate} />}
-      {view.page === 'adminsettings' && <AdminSettings onNavigate={navigate} />}
-      {view.page === 'profilesettings' && <ProfileSettings onNavigate={navigate} />}
-      {view.page === 'forgotpwd' && <ForgotPassword onNavigate={navigate} />}
-      {view.page === 'reset' && <PasswordReset onNavigate={navigate} />}
-      {view.page === 'terms' && <TermsOfService onNavigate={navigate} />}
-      {view.page === 'topic' && <CategoryView topic={view.topic} onNavigate={navigate} />}
-      {view.page === 'newthread' && <CreateNewThread topic={view.topic} onNavigate={navigate} />}
-      {view.page === 'thread' && <ThreadView thread={view.thread} topic={view.topic} onNavigate={navigate} />}
-      {view.page === 'search' && <SearchPage onNavigate={navigate} />}
-      {view.page === 'memberprofile' && <MemberProfile memberId={view.memberId} onNavigate={navigate} />}
+      {banned && (
+        <div className="page-content">
+          <div className="auth-container">
+            <div className="policy-card">
+              <h1 className="general-heading">You have been banned from this forum.</h1>
+              <hr /><br />
+              <p style={{ color: 'var(--text-secondary)' }}>If you believe this is a mistake, please contact an administrator.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!banned && view.page === 'home' && <ForumHome onNavigate={navigate} />}
+      {!banned && view.page === 'login' && <ForumLogin onNavigate={navigate} />}
+      {!banned && view.page === 'register' && <ForumRegister onNavigate={navigate} />}
+      {!banned && view.page === 'memberpage' && <MemberPage onNavigate={navigate} />}
+      {!banned && view.page === 'adminsettings' && <AdminSettings onNavigate={navigate} />}
+      {!banned && view.page === 'profilesettings' && <ProfileSettings onNavigate={navigate} />}
+      {!banned && view.page === 'forgotpwd' && <ForgotPassword onNavigate={navigate} />}
+      {!banned && view.page === 'reset' && <PasswordReset onNavigate={navigate} />}
+      {!banned && view.page === 'terms' && <TermsOfService onNavigate={navigate} />}
+      {!banned && view.page === 'topic' && <CategoryView topic={view.topic} onNavigate={navigate} />}
+      {!banned && view.page === 'newthread' && <CreateNewThread topic={view.topic} onNavigate={navigate} />}
+      {!banned && view.page === 'thread' && <ThreadView thread={view.thread} topic={view.topic} onNavigate={navigate} />}
+      {!banned && view.page === 'search' && <SearchPage onNavigate={navigate} />}
+      {!banned && view.page === 'memberprofile' && <MemberProfile memberId={view.memberId} onNavigate={navigate} />}
 
       <Footer onNavigate={navigate} />
     </div>

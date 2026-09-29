@@ -141,6 +141,13 @@ export default function AdminSettings({ onNavigate }) {
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoStatus, setLogoStatus] = useState(null);
 
+  const [bannedUsers, setBannedUsers] = useState([]);
+  const [allMembers, setAllMembers] = useState([]);
+  const [banUserId, setBanUserId] = useState('');
+  const [banReason, setBanReason] = useState('');
+  const [banStatus, setBanStatus] = useState('');
+  const [reportedContent, setReportedContent] = useState([]);
+
   const capitalize = str => str[0].toUpperCase() + str.slice(1);
 
 
@@ -245,6 +252,14 @@ export default function AdminSettings({ onNavigate }) {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    if (!token) return;
+    const headers = { Authorization: `Bearer ${token}` };
+    fetch(`${API}/admin/bans`, { headers }).then(r => r.json()).then(setBannedUsers).catch(() => {});
+    fetch(`${API}/members`, { headers }).then(r => r.json()).then(data => setAllMembers(Array.isArray(data) ? data.filter(m => m.username !== 'admin') : [])).catch(() => {});
+    fetch(`${API}/admin/reports`, { headers }).then(r => r.json()).then(setReportedContent).catch(() => {});
+  }, [token]);
 
   // Submit Form Values to Server Side
 
@@ -567,9 +582,32 @@ export default function AdminSettings({ onNavigate }) {
     setLogoStatus({ type: 'ok', text: 'Logo removed.' });
   };
 
-  
+  const handleBanUser = async () => {
+    if (!banUserId) return;
+    await fetch(`${API}/admin/bans`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ user_id: parseInt(banUserId), reason: banReason }),
+    });
+    setBanStatus('User banned.');
+    setBanUserId(''); setBanReason('');
+    const rows = await fetch(`${API}/admin/bans`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json());
+    setBannedUsers(rows);
+  };
 
-  if (user.username == 'admin') {
+  const handleUnbanUser = async (userId) => {
+    await fetch(`${API}/admin/bans/${userId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    setBannedUsers(prev => prev.filter(b => b.user_id !== userId));
+  };
+
+  const handleDismissReports = async (type, id) => {
+    await fetch(`${API}/admin/reports/${type}/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    setReportedContent(prev => prev.filter(r => !(r.type === type && r.id === id)));
+  };
+
+
+
+  if (user?.username == 'admin') {
 
       if (loading) return <p>Loading categories and topics...</p>;
       if (error) return <p>Error: {error}</p>;
@@ -1090,14 +1128,63 @@ export default function AdminSettings({ onNavigate }) {
 
                   <div id="section-ban" className="admin-card">
                     <div className="admin-content">
-                        <h2><b> Ban Users from Forum</b></h2>
-                        <br></br>
-                        <p> Here you will be able to ban Specific Users from Interacting on the Forums </p>
-                        <br></br>
-                        <hr></hr>
-                        <br></br>
+                      <h2><b>Ban Users from Forum</b></h2><br />
+                      <p>Banned users cannot log in or interact with the forum. Their existing content is preserved.</p>
+                      <br /><hr /><br />
 
-                        <button className="btn-submit-reply" onClick={() => onNavigate('home')}>Return to Homepage</button>
+                      <h3>Ban a User</h3><br />
+                      <select value={banUserId} onChange={e => { setBanUserId(e.target.value); setBanStatus(''); }} className="admin-input">
+                        <option value="">— Select a user —</option>
+                        {allMembers
+                          .filter(m => !bannedUsers.find(b => b.user_id === m.id))
+                          .map(m => <option key={m.id} value={m.id}>{m.username}</option>)
+                        }
+                      </select><br /><br />
+                      <input
+                        className="admin-input"
+                        placeholder="Reason (optional)"
+                        value={banReason}
+                        onChange={e => setBanReason(e.target.value)}
+                      /><br /><br />
+                      <button className="btn-submit-reply" onClick={handleBanUser} disabled={!banUserId}>
+                        Ban User
+                      </button>
+                      {banStatus && <p className="reply-status">{banStatus}</p>}
+
+                      <br /><hr /><br />
+                      <h3>Currently Banned</h3><br />
+                      {bannedUsers.length === 0
+                        ? <p style={{ color: 'var(--text-muted)' }}>No users are currently banned.</p>
+                        : bannedUsers.map(b => (
+                            <div key={b.user_id} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                              <span style={{ fontWeight: 600 }}>{b.username}</span>
+                              {b.reason && <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>— {b.reason}</span>}
+                              <button className="btn-pin-toggle" onClick={() => handleUnbanUser(b.user_id)}>Unban</button>
+                            </div>
+                          ))
+                      }
+                    </div>
+                  </div>
+
+                  <div id="section-reports" className="admin-card">
+                    <div className="admin-content">
+                      <h2><b>Reported Content</b></h2><br />
+                      <p>Content that forum members have flagged for review. Dismissing clears all reports for that item.</p>
+                      <br /><hr /><br />
+                      {reportedContent.length === 0
+                        ? <p style={{ color: 'var(--text-muted)' }}>No reported content.</p>
+                        : reportedContent.map(item => (
+                            <div key={`${item.type}-${item.id}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px', padding: '10px', background: 'var(--bg-hover)', borderRadius: '6px' }}>
+                              <span style={{ background: 'var(--badge-admin-bg)', color: '#fff', fontSize: '0.7rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
+                                {item.count} report{item.count !== 1 ? 's' : ''}
+                              </span>
+                              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{item.type}</span>
+                              <span style={{ flex: 1, fontSize: '0.85rem' }}>{item.label}</span>
+                              <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>by {item.author}</span>
+                              <button className="btn-pin-toggle" onClick={() => handleDismissReports(item.type, item.id)}>Dismiss</button>
+                            </div>
+                          ))
+                      }
                     </div>
                   </div>
 
