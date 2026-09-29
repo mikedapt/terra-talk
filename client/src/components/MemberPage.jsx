@@ -72,6 +72,11 @@ export default function MemberPage({ onNavigate }) {
               </div>
               <div className="member-info">
                 <span className="member-username">{member.username}</span>
+                <div className="member-stats">
+                  <span className="member-stat">📝 {member.thread_count ?? 0} threads</span>
+                  <span className="member-stat">💬 {member.reply_count ?? 0} replies</span>
+                  <span className="member-stat">👍 {member.total_likes ?? 0} likes</span>
+                </div>
               </div>
               <div className="member-joined">
                 <span className="member-joined-label">Joined</span>

@@ -230,6 +230,13 @@ function adminRequired(req, res, next) {
   next();
 }
 
+function optionalAuth(req, res, next) {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return next();
+  try { req.user = jwt.verify(token, JWT_SECRET); } catch { /* ignore */ }
+  next();
+}
+
 // --- Auth ---
 
 
@@ -650,14 +657,82 @@ app.post('/api/quicklinks/reset', authRequired, adminRequired, (req, res) => {
 
 // --- Members ---
 app.get('/api/members', authRequired, (req, res) => {
-  const rows = db.prepare('SELECT id, username, profile_path, created_at FROM users ORDER BY created_at ASC').all();
+  const rows = db.prepare(`
+    SELECT u.id, u.username, u.profile_path, u.created_at,
+           (SELECT COUNT(*) FROM threads WHERE user_id = u.id) AS thread_count,
+           (SELECT COUNT(*) FROM posts WHERE user_id = u.id) AS reply_count,
+           (SELECT COUNT(*) FROM thread_likes tl JOIN threads t ON tl.thread_id = t.id WHERE t.user_id = u.id)
+           + (SELECT COUNT(*) FROM post_likes pl JOIN posts p ON pl.post_id = p.id WHERE p.user_id = u.id) AS total_likes
+    FROM users u ORDER BY u.created_at ASC
+  `).all();
   res.json(rows);
 });
 
 app.get('/api/members/:id', authRequired, (req, res) => {
-  const member = db.prepare('SELECT id, username, profile_path, created_at FROM users WHERE id = ?').get(req.params.id);
+  const member = db.prepare(`
+    SELECT u.id, u.username, u.profile_path, u.created_at,
+           (SELECT COUNT(*) FROM threads WHERE user_id = u.id) AS thread_count,
+           (SELECT COUNT(*) FROM posts WHERE user_id = u.id) AS reply_count,
+           (SELECT COUNT(*) FROM thread_likes tl JOIN threads t ON tl.thread_id = t.id WHERE t.user_id = u.id)
+           + (SELECT COUNT(*) FROM post_likes pl JOIN posts p ON pl.post_id = p.id WHERE p.user_id = u.id) AS total_likes
+    FROM users u WHERE u.id = ?
+  `).get(req.params.id);
   if (!member) return res.status(404).json({ error: 'Member not found' });
   res.json(member);
+});
+
+// --- Likes ---
+app.get('/api/thread-likes', optionalAuth, (req, res) => {
+  const thread_id = parseInt(req.query.thread_id, 10);
+  if (!thread_id) return res.status(400).json({ error: 'thread_id required' });
+  const { count } = db.prepare('SELECT COUNT(*) AS count FROM thread_likes WHERE thread_id = ?').get(thread_id);
+  const hasLiked = req.user
+    ? !!db.prepare('SELECT 1 FROM thread_likes WHERE user_id = ? AND thread_id = ?').get(req.user.id, thread_id)
+    : false;
+  res.json({ count, hasLiked });
+});
+
+app.get('/api/post-likes', optionalAuth, (req, res) => {
+  const thread_id = parseInt(req.query.thread_id, 10);
+  if (!thread_id) return res.status(400).json({ error: 'thread_id required' });
+  const rows = db.prepare(`
+    SELECT p.id AS post_id,
+           COUNT(pl.user_id) AS count,
+           MAX(CASE WHEN pl.user_id = ? THEN 1 ELSE 0 END) AS hasLiked
+    FROM posts p
+    LEFT JOIN post_likes pl ON pl.post_id = p.id
+    WHERE p.thread_id = ?
+    GROUP BY p.id
+  `).all(req.user?.id ?? 0, thread_id);
+  const result = {};
+  for (const row of rows) result[row.post_id] = { count: row.count, hasLiked: !!row.hasLiked };
+  res.json(result);
+});
+
+app.post('/api/thread-likes', authRequired, (req, res) => {
+  const thread_id = parseInt(req.body.thread_id, 10);
+  if (!thread_id) return res.status(400).json({ error: 'thread_id required' });
+  const alreadyLiked = !!db.prepare('SELECT 1 FROM thread_likes WHERE user_id = ? AND thread_id = ?').get(req.user.id, thread_id);
+  if (alreadyLiked) {
+    db.prepare('DELETE FROM thread_likes WHERE user_id = ? AND thread_id = ?').run(req.user.id, thread_id);
+  } else {
+    db.prepare('INSERT OR IGNORE INTO thread_likes (user_id, thread_id) VALUES (?, ?)').run(req.user.id, thread_id);
+  }
+  const { count } = db.prepare('SELECT COUNT(*) AS count FROM thread_likes WHERE thread_id = ?').get(thread_id);
+  res.json({ liked: !alreadyLiked, count });
+});
+
+app.post('/api/post-likes', authRequired, (req, res) => {
+  const post_id = parseInt(req.body.post_id, 10);
+  if (!post_id) return res.status(400).json({ error: 'post_id required' });
+  const alreadyLiked = !!db.prepare('SELECT 1 FROM post_likes WHERE user_id = ? AND post_id = ?').get(req.user.id, post_id);
+  if (alreadyLiked) {
+    db.prepare('DELETE FROM post_likes WHERE user_id = ? AND post_id = ?').run(req.user.id, post_id);
+  } else {
+    db.prepare('INSERT OR IGNORE INTO post_likes (user_id, post_id) VALUES (?, ?)').run(req.user.id, post_id);
+  }
+  const { count } = db.prepare('SELECT COUNT(*) AS count FROM post_likes WHERE post_id = ?').get(post_id);
+  res.json({ liked: !alreadyLiked, count });
 });
 
 // --- Search ---

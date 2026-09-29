@@ -62,20 +62,32 @@ export default function MemberProfile({ memberId, onNavigate }) {
           {loading && <div className="empty-state">Loading…</div>}
           {error && <div className="empty-state" style={{ color: 'var(--badge-admin-bg)' }}>{error}</div>}
           {!loading && !error && member && (
-            <div className="member-row" style={{ alignItems: 'center', gap: '1.5rem', padding: '1.5rem' }}>
-              <div className="member-avatar-wrap" style={{ width: '72px', height: '72px', flexShrink: 0 }}>
-                <div className="thread-avatar" style={{ width: '72px', height: '72px', fontSize: '1.75rem' }}>
+            <div className="member-profile-card">
+              <span className="member-username member-profile-name">{member.username}</span>
+              <div className="member-avatar-wrap" style={{ width: '80px', height: '80px' }}>
+                <div className="thread-avatar" style={{ width: '80px', height: '80px', fontSize: '2rem' }}>
                   {member.profile_path
                     ? <img src={`http://localhost:3001/profiles/${member.profile_path}`} alt={`${member.username}'s avatar`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                     : member.username.charAt(0).toUpperCase()
                   }
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <span className="member-username" style={{ fontSize: '1.25rem' }}>{member.username}</span>
+              <div className="member-profile-stats">
                 <div className="member-joined">
                   <span className="member-joined-label">Registered</span>
                   <span className="member-joined-date">{formatDate(member.created_at)}</span>
+                </div>
+                <div className="member-joined">
+                  <span className="member-joined-label">Threads</span>
+                  <span className="member-joined-date">{member.thread_count ?? 0}</span>
+                </div>
+                <div className="member-joined">
+                  <span className="member-joined-label">Replies</span>
+                  <span className="member-joined-date">{member.reply_count ?? 0}</span>
+                </div>
+                <div className="member-joined">
+                  <span className="member-joined-label">Likes Received</span>
+                  <span className="member-joined-date">{member.total_likes ?? 0}</span>
                 </div>
               </div>
             </div>

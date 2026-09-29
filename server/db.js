@@ -96,6 +96,27 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_threads_topic ON threads(topic_id);
   CREATE INDEX IF NOT EXISTS idx_posts_thread   ON posts(thread_id);
+
+  CREATE TABLE IF NOT EXISTS thread_likes (
+    user_id   INTEGER NOT NULL,
+    thread_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, thread_id),
+    FOREIGN KEY (user_id)   REFERENCES users(id)   ON DELETE CASCADE,
+    FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS post_likes (
+    user_id INTEGER NOT NULL,
+    post_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, post_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_thread_likes_thread ON thread_likes(thread_id);
+  CREATE INDEX IF NOT EXISTS idx_post_likes_post     ON post_likes(post_id);
 `);
 
 // Seed default quicklinks if table is empty

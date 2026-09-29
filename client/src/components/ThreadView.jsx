@@ -11,6 +11,8 @@ export default function ThreadView({ thread, topic, onNavigate }) {
   const [error, setError] = useState(null);
   const [status, setStatus] = useState(null);
   const [viewCount, setViewCount] = useState(null);
+  const [threadLike, setThreadLike] = useState({ count: 0, hasLiked: false });
+  const [postLikes, setPostLikes] = useState({});
 
 
   const loadPosts = async () => {
@@ -20,11 +22,21 @@ export default function ThreadView({ thread, topic, onNavigate }) {
     setPosts(Array.isArray(data) ? data : []);
   };
 
+  const loadLikes = async () => {
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const [tl, pl] = await Promise.all([
+      fetch(`http://localhost:3001/api/thread-likes?thread_id=${thread.id}`, { headers }).then(r => r.json()),
+      fetch(`http://localhost:3001/api/post-likes?thread_id=${thread.id}`, { headers }).then(r => r.json()),
+    ]);
+    setThreadLike(tl);
+    setPostLikes(pl);
+  };
+
   useEffect(() => {
     const controller = new AbortController();
     const { signal } = controller;
 
-    loadPosts()
+    Promise.all([loadPosts(), loadLikes()])
       .catch(() => setStatus("Could not load posts"))
       .finally(() => setLoading(false));
 
@@ -48,6 +60,39 @@ export default function ThreadView({ thread, topic, onNavigate }) {
 
   const threadPosts = posts.filter((p) => p.thread_id === thread.id);
 
+
+  const handleThreadLike = async () => {
+    if (!user) return;
+    const prev = threadLike;
+    setThreadLike(tl => ({ count: tl.hasLiked ? tl.count - 1 : tl.count + 1, hasLiked: !tl.hasLiked }));
+    try {
+      const res = await fetch('http://localhost:3001/api/thread-likes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ thread_id: thread.id }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setThreadLike({ count: data.count, hasLiked: data.liked });
+    } catch { setThreadLike(prev); }
+  };
+
+  const handlePostLike = async (post_id) => {
+    if (!user) return;
+    const prev = postLikes;
+    const current = postLikes[post_id] || { count: 0, hasLiked: false };
+    setPostLikes(pl => ({ ...pl, [post_id]: { count: current.hasLiked ? current.count - 1 : current.count + 1, hasLiked: !current.hasLiked } }));
+    try {
+      const res = await fetch('http://localhost:3001/api/post-likes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ post_id }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setPostLikes(pl => ({ ...pl, [post_id]: { count: data.count, hasLiked: data.liked } }));
+    } catch { setPostLikes(prev); }
+  };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -134,7 +179,13 @@ export default function ThreadView({ thread, topic, onNavigate }) {
                 ))}
               </div>
               <div className="post-footer">
-                <button className="post-action">👍 Like</button>
+                <button
+                  className={`post-action${threadLike.hasLiked ? ' liked' : ''}`}
+                  onClick={handleThreadLike}
+                  disabled={!user}
+                >
+                  {threadLike.count > 0 ? `👍 ${threadLike.count}` : '👍 Like'}
+                </button>
                 <button className="post-action">💬 Quote</button>
                 <button className="post-action">🚩 Report</button>
               </div>
@@ -167,7 +218,13 @@ export default function ThreadView({ thread, topic, onNavigate }) {
                 ))}
               </div>
               <div className="post-footer">
-                <button className="post-action">👍 Like</button>
+                <button
+                  className={`post-action${postLikes[post.id]?.hasLiked ? ' liked' : ''}`}
+                  onClick={() => handlePostLike(post.id)}
+                  disabled={!user}
+                >
+                  {postLikes[post.id]?.count > 0 ? `👍 ${postLikes[post.id].count}` : '👍 Like'}
+                </button>
                 <button className="post-action">💬 Quote</button>
                 <button className="post-action">🚩 Report</button>
               </div>
