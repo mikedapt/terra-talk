@@ -503,6 +503,18 @@ app.get('/api/threads', (req, res) => {
   res.json(rows);
 });
 
+app.patch('/api/threads/:id/pin', authRequired, adminRequired, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!id) return res.status(400).json({ error: 'Invalid thread id' });
+
+  const thread = db.prepare('SELECT id, is_pinned FROM threads WHERE id = ?').get(id);
+  if (!thread) return res.status(404).json({ error: 'Thread not found' });
+
+  const newValue = thread.is_pinned ? 0 : 1;
+  db.prepare('UPDATE threads SET is_pinned = ? WHERE id = ?').run(newValue, id);
+  res.json({ id, is_pinned: newValue });
+});
+
 app.post('/api/newthread', authRequired, async (req, res) => {
 
   const { threadtitle, threadbody, threadtopic } = req.body;

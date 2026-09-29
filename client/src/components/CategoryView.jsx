@@ -8,7 +8,7 @@ export default function CategoryView({ topic, onNavigate }) {
 
   const currcategory = topic.name
 
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +31,32 @@ export default function CategoryView({ topic, onNavigate }) {
 
     return () => { cancelled = true; };
   }, []);
-  
+
+  const handleTogglePin = async (threadId, currentIsPinned) => {
+    setThreads(prev =>
+      prev.map(t => t.id === threadId ? { ...t, is_pinned: currentIsPinned ? 0 : 1 } : t)
+    );
+    try {
+      const res = await fetch(`http://localhost:3001/api/threads/${threadId}/pin`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        setThreads(prev =>
+          prev.map(t => t.id === threadId ? { ...t, is_pinned: currentIsPinned } : t)
+        );
+      } else {
+        const data = await res.json();
+        setThreads(prev =>
+          prev.map(t => t.id === threadId ? { ...t, is_pinned: data.is_pinned } : t)
+        );
+      }
+    } catch {
+      setThreads(prev =>
+        prev.map(t => t.id === threadId ? { ...t, is_pinned: currentIsPinned } : t)
+      );
+    }
+  };
 
   const topicThreads = threads.filter((t) => t.topic_id === topic.id);
 
@@ -82,6 +107,8 @@ export default function CategoryView({ topic, onNavigate }) {
             key={thread.id}
             thread={thread}
             pinned
+            user={user}
+            onTogglePin={handleTogglePin}
             onClick={() => onNavigate('thread', { thread, topic })}
           />
         ))}
@@ -89,6 +116,8 @@ export default function CategoryView({ topic, onNavigate }) {
           <ThreadRow
             key={thread.id}
             thread={thread}
+            user={user}
+            onTogglePin={handleTogglePin}
             onClick={() => onNavigate('thread', { thread, topic })}
           />
         ))}
@@ -101,7 +130,7 @@ export default function CategoryView({ topic, onNavigate }) {
   )
 }
 
-function ThreadRow({ thread, pinned, onClick }) {
+function ThreadRow({ thread, pinned, user, onTogglePin, onClick }) {
 
   const [counts, setPostCounts] = useState({ postcount: 0 });
   const [viewCount, setViewCount] = useState(null);
@@ -132,6 +161,15 @@ function ThreadRow({ thread, pinned, onClick }) {
           <div className="thread-title-row">
             {pinned && <span className="pin-badge">📌 Pinned</span>}
             <span className="thread-title">{thread.title}</span>
+            {user?.username === 'admin' && (
+              <button
+                className="btn-pin-toggle"
+                onClick={(e) => { e.stopPropagation(); onTogglePin(thread.id, thread.is_pinned); }}
+                title={thread.is_pinned ? 'Unpin thread' : 'Pin thread'}
+              >
+                {thread.is_pinned ? '📌 Unpin' : '📌 Pin'}
+              </button>
+            )}
           </div>
           <div className="thread-meta">
             by <span className="thread-author">{thread.username}</span>
