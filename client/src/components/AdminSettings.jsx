@@ -1157,7 +1157,7 @@ export default function AdminSettings({ onNavigate }) {
                         ? <p style={{ color: 'var(--text-muted)' }}>No users are currently banned.</p>
                         : bannedUsers.map(b => (
                             <div key={b.user_id} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                              <span style={{ fontWeight: 600 }}>{b.username}</span>
+                              <span style={{ fontWeight: 600, color:'var(--text-primary)' }}>{b.username}</span>
                               {b.reason && <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>— {b.reason}</span>}
                               <button className="btn-pin-toggle" onClick={() => handleUnbanUser(b.user_id)}>Unban</button>
                             </div>

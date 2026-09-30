@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
 
@@ -6,6 +6,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
 
   const { user, token } = useAuth();
   const [form, setForm] = useState({ postbody: "", postthread: thread.id});
+  const textareaRef = useRef(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -142,6 +143,13 @@ export default function ThreadView({ thread, topic, onNavigate }) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleQuote = (text) => {
+    const quoted = `"${text}"\n\n`;
+    setForm(f => ({ ...f, postbody: quoted + f.postbody }));
+    textareaRef.current?.scrollIntoView({ behavior: 'smooth' });
+    textareaRef.current?.focus();
+  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -230,7 +238,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
                 >
                   {threadLike.count > 0 ? `👍 ${threadLike.count}` : '👍 Like'}
                 </button>
-                <button className="post-action">💬 Quote</button>
+                <button className="post-action" onClick={() => handleQuote(thread.body)} disabled={!user}>💬 Quote</button>
                 <button
                   className={`post-action${threadReport.hasReported ? ' reported' : ''}`}
                   onClick={handleThreadReport}
@@ -275,7 +283,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
                 >
                   {postLikes[post.id]?.count > 0 ? `👍 ${postLikes[post.id].count}` : '👍 Like'}
                 </button>
-                <button className="post-action">💬 Quote</button>
+                <button className="post-action" onClick={() => handleQuote(post.body)} disabled={!user}>💬 Quote</button>
                 <button
                   className={`post-action${postReports[post.id]?.hasReported ? ' reported' : ''}`}
                   onClick={() => handlePostReport(post.id)}
@@ -294,7 +302,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
       <div className="reply-box">
         <form id="thread-form" onSubmit={handleSubmit} noValidate>
           <h3 className="reply-box-title">Post a Reply</h3>
-          <textarea className="reply-textarea" placeholder="Write your reply here..." id="postbody" name="postbody" value={form.postbody} onChange={handleChange} rows={5} />
+          <textarea className="reply-textarea" placeholder="Write your reply here..." id="postbody" name="postbody" value={form.postbody} onChange={handleChange} rows={5} ref={textareaRef} />
           <div className="reply-box-footer">
             <button type="submit" className="btn-submit-reply">Post Reply</button>
           </div>
