@@ -226,7 +226,8 @@ function authRequired(req, res, next) {
 }
 
 function adminRequired(req, res, next) {
-  if (req.user?.username !== 'admin') {
+  const row = db.prepare('SELECT is_admin FROM users WHERE id = ?').get(req.user.id);
+  if (!row?.is_admin) {
     return res.status(403).json({ error: 'Admins only' });
   }
   next();
@@ -243,7 +244,7 @@ function optionalAuth(req, res, next) {
 
 
 app.get('/api/me', authRequired, (req, res) => {
-  const user = db.prepare('SELECT id, username, profile_path FROM users WHERE id = ?').get(req.user.id);
+  const user = db.prepare('SELECT id, username, profile_path, is_admin FROM users WHERE id = ?').get(req.user.id);
   res.json({ user });
 });
 
@@ -255,7 +256,7 @@ app.patch('/api/me/username', authRequired, (req, res) => {
   const taken = db.prepare('SELECT id FROM users WHERE username = ? AND id != ?').get(username, req.user.id);
   if (taken) return res.status(400).json({ error: 'Username is already taken.' });
   db.prepare('UPDATE users SET username = ? WHERE id = ?').run(username, req.user.id);
-  const token = jwt.sign({ id: req.user.id, username }, JWT_SECRET);
+  const token = jwt.sign({ id: req.user.id, username, is_admin: req.user.is_admin }, JWT_SECRET);
   res.json({ token, username });
 });
 
@@ -304,8 +305,8 @@ app.post('/api/register', async (req, res) => {
               const info = db.prepare(
               'INSERT INTO users (username, email, profile_path, password_hash) VALUES (?, ?, ?, ?)'
               ).run(username, email, proicon, hash);
-              const token = jwt.sign({ id: info.lastInsertRowid, username }, JWT_SECRET);
-              res.json({ token, user: { id: info.lastInsertRowid, username, profile_path: proicon } });
+              const token = jwt.sign({ id: info.lastInsertRowid, username, is_admin: 0 }, JWT_SECRET);
+              res.json({ token, user: { id: info.lastInsertRowid, username, profile_path: proicon, is_admin: 0 } });
               //res.status(400).json({ error: agree });
               console.log("register success!");
         } catch (e) {
@@ -382,15 +383,15 @@ app.post('/api/resetpwd', resetLimiter, async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
-  const user = db.prepare('SELECT id, username, password_hash, profile_path FROM users WHERE username = ?').get(username);
+  const user = db.prepare('SELECT id, username, password_hash, profile_path, is_admin FROM users WHERE username = ?').get(username);
 
   if (!user || !(await bcrypt.compare(password, user.password_hash))) {
      return res.status(401).json({ error: 'Invalid credentials' });
   }
   const ban = db.prepare('SELECT reason FROM bans WHERE user_id = ?').get(user.id);
   if (ban) return res.status(403).json({ error: 'banned', reason: ban.reason });
-  const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
-  res.json({ token, user: { id: user.id, username: user.username, profile_path: user.profile_path } });
+  const token = jwt.sign({ id: user.id, username: user.username, is_admin: user.is_admin }, JWT_SECRET);
+  res.json({ token, user: { id: user.id, username: user.username, profile_path: user.profile_path, is_admin: user.is_admin } });
   console.log("login success!");
 });
 

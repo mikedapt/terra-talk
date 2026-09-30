@@ -607,7 +607,7 @@ export default function AdminSettings({ onNavigate }) {
 
 
 
-  if (user?.username == 'admin') {
+  if (user?.is_admin) {
 
       if (loading) return <p>Loading categories and topics...</p>;
       if (error) return <p>Error: {error}</p>;

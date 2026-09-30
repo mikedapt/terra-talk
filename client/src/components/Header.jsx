@@ -33,8 +33,8 @@ export default function Header({ darkMode, toggleDark, onNavigate }) {
     return () => window.removeEventListener('siteSettingsChanged', handler);
   }, []);
 
-  function AdminMenu({username}) {
-    if (username == 'admin') {
+  function AdminMenu() {
+    if (user?.is_admin) {
        return (
               <button onClick={() => onNavigate('adminsettings')}>Forum Settings</button>
        );
@@ -53,7 +53,7 @@ export default function Header({ darkMode, toggleDark, onNavigate }) {
         <button onClick={() => setOpen(o => !o)}>{username} ▾</button>
         {open && (
           <div className="dropdown">
-            <AdminMenu username={username}></AdminMenu>
+            <AdminMenu></AdminMenu>
             <button onClick={() => onNavigate('profilesettings')}>Profile Settings</button>
             <button onClick={onLogout}>Log out</button>
           </div>
