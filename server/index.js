@@ -233,6 +233,11 @@ function adminRequired(req, res, next) {
   next();
 }
 
+function ownerRequired(req, res, next) {
+  if (req.user.id !== 1) return res.status(403).json({ error: 'Owner only' });
+  next();
+}
+
 function optionalAuth(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return next();
@@ -507,7 +512,7 @@ app.get('/api/threads', (req, res) => {
   //const rows = db.prepare(`SELECT id, topic_id, user_id, title, body, created_at, is_pinned FROM threads ORDER BY title`).all();
   const rows = db.prepare(`
     SELECT t.id, t.topic_id, t.title, t.body, t.created_at, t.is_pinned,
-           u.id AS user_id, u.username, u.profile_path
+           u.id AS user_id, u.username, u.profile_path, u.is_admin
     FROM threads t
     JOIN users u ON u.id = t.user_id
     ORDER BY t.title
@@ -549,7 +554,7 @@ app.get('/api/posts',  (req, res) => {
    
   const rows = db.prepare(`
     SELECT p.id, p.thread_id, p.body, p.created_at,
-           u.id AS user_id, u.username, u.profile_path
+           u.id AS user_id, u.username, u.profile_path, u.is_admin
     FROM posts p
     JOIN users u ON u.id = p.user_id
     ORDER BY p.created_at
@@ -663,7 +668,7 @@ app.post('/api/quicklinks/reset', authRequired, adminRequired, (req, res) => {
 // --- Members ---
 app.get('/api/members', authRequired, (req, res) => {
   const rows = db.prepare(`
-    SELECT u.id, u.username, u.profile_path, u.created_at,
+    SELECT u.id, u.username, u.profile_path, u.created_at, u.is_admin,
            (SELECT COUNT(*) FROM threads WHERE user_id = u.id) AS thread_count,
            (SELECT COUNT(*) FROM posts WHERE user_id = u.id) AS reply_count,
            (SELECT COUNT(*) FROM thread_likes tl JOIN threads t ON tl.thread_id = t.id WHERE t.user_id = u.id)
@@ -675,7 +680,7 @@ app.get('/api/members', authRequired, (req, res) => {
 
 app.get('/api/members/:id', authRequired, (req, res) => {
   const member = db.prepare(`
-    SELECT u.id, u.username, u.profile_path, u.created_at,
+    SELECT u.id, u.username, u.profile_path, u.created_at, u.is_admin,
            (SELECT COUNT(*) FROM threads WHERE user_id = u.id) AS thread_count,
            (SELECT COUNT(*) FROM posts WHERE user_id = u.id) AS reply_count,
            (SELECT COUNT(*) FROM thread_likes tl JOIN threads t ON tl.thread_id = t.id WHERE t.user_id = u.id)
@@ -760,6 +765,16 @@ app.post('/api/admin/bans', authRequired, adminRequired, (req, res) => {
 app.delete('/api/admin/bans/:user_id', authRequired, adminRequired, (req, res) => {
   db.prepare('DELETE FROM bans WHERE user_id = ?').run(req.params.user_id);
   res.json({ ok: true });
+});
+
+app.patch('/api/admin/users/:id/admin', authRequired, ownerRequired, (req, res) => {
+  const targetId = parseInt(req.params.id);
+  if (targetId === req.user.id) return res.status(400).json({ error: 'Cannot change your own admin status.' });
+  const target = db.prepare('SELECT id, is_admin FROM users WHERE id = ?').get(targetId);
+  if (!target) return res.status(404).json({ error: 'User not found.' });
+  const newValue = target.is_admin ? 0 : 1;
+  db.prepare('UPDATE users SET is_admin = ? WHERE id = ?').run(newValue, targetId);
+  res.json({ id: targetId, is_admin: newValue });
 });
 
 // --- Reports ---

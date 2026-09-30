@@ -61,7 +61,7 @@ export default function MemberPage({ onNavigate }) {
             <div className="empty-state">No members found.</div>
           )}
           {!loading && !error && members.map(member => (
-            <div key={member.id} className="member-row">
+            <div key={member.id} className="member-row" onClick={() => onNavigate('memberprofile', { memberId: member.id })} style={{ cursor: 'pointer' }}>
               <div className="member-avatar-wrap">
                 <div className="thread-avatar">
                   {member.profile_path
@@ -71,7 +71,14 @@ export default function MemberPage({ onNavigate }) {
                 </div>
               </div>
               <div className="member-info">
-                <span className="member-username">{member.username}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span className="member-username">{member.username}</span>
+                  {member.is_admin === 1
+                    ? <span className="role-badge admin">Admin</span>
+                    : member.username.startsWith('moderator')
+                      ? <span className="role-badge mod">Mod</span>
+                      : <span className="role-badge member">Member</span>}
+                </div>
                 <div className="member-stats">
                   <span className="member-stat">📝 {member.thread_count ?? 0} threads</span>
                   <span className="member-stat">💬 {member.reply_count ?? 0} replies</span>

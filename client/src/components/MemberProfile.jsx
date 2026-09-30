@@ -63,6 +63,11 @@ export default function MemberProfile({ memberId, onNavigate }) {
           {error && <div className="empty-state" style={{ color: 'var(--badge-admin-bg)' }}>{error}</div>}
           {!loading && !error && member && (
             <div className="member-profile-card">
+              {member.is_admin === 1
+                ? <span className="role-badge admin">Admin</span>
+                : member.username.startsWith('moderator')
+                  ? <span className="role-badge mod">Mod</span>
+                  : <span className="role-badge member">Member</span>}
               <span className="member-username member-profile-name">{member.username}</span>
               <div className="member-avatar-wrap" style={{ width: '80px', height: '80px' }}>
                 <div className="thread-avatar" style={{ width: '80px', height: '80px', fontSize: '2rem' }}>

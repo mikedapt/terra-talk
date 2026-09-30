@@ -34,7 +34,7 @@ export default function ForumRegister({ onNavigate }) {
          return;
       }
       setStatus("Registered!");
-      onNavigate('home');
+      onNavigate('login');
     } catch {
       setStatus("Network error");
     }

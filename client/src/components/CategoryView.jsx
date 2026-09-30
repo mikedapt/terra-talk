@@ -161,7 +161,7 @@ function ThreadRow({ thread, pinned, user, onTogglePin, onClick }) {
           <div className="thread-title-row">
             {pinned && <span className="pin-badge">📌 Pinned</span>}
             <span className="thread-title">{thread.title}</span>
-            {user?.is_admin && (
+            {!!user?.is_admin && (
               <button
                 className="btn-pin-toggle"
                 onClick={(e) => { e.stopPropagation(); onTogglePin(thread.id, thread.is_pinned); }}

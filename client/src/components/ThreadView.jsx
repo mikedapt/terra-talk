@@ -215,7 +215,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
               <div className="post-avatar"><img src={`http://localhost:3001/profiles/${thread.profile_path}`}></img></div>
               <div className="post-author-name">{thread.username}</div>
               <div className="post-author-role">
-                {thread.username === 'admin' ? <span className="role-badge admin">Admin</span>
+                {thread.is_admin === 1 ? <span className="role-badge admin">Admin</span>
                   : thread.username.startsWith('moderator') ? <span className="role-badge mod">Mod</span>
                   : <span className="role-badge member">Member</span>}
               </div>
@@ -260,7 +260,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
               <div className="post-avatar"><img src={`http://localhost:3001/profiles/${post.profile_path}`}></img></div>
               <div className="post-author-name">{post.username}</div>
               <div className="post-author-role">
-                {post.username === 'admin' ? <span className="role-badge admin">Admin</span>
+                {post.is_admin === 1 ? <span className="role-badge admin">Admin</span>
                   : post.username.startsWith('moderator') ? <span className="role-badge mod">Mod</span>
                   : <span className="role-badge member">Member</span>}
               </div>

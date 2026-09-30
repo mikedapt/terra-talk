@@ -147,6 +147,7 @@ export default function AdminSettings({ onNavigate }) {
   const [banReason, setBanReason] = useState('');
   const [banStatus, setBanStatus] = useState('');
   const [reportedContent, setReportedContent] = useState([]);
+  const [adminPromoteStatus, setAdminPromoteStatus] = useState('');
 
   const capitalize = str => str[0].toUpperCase() + str.slice(1);
 
@@ -605,6 +606,18 @@ export default function AdminSettings({ onNavigate }) {
     setReportedContent(prev => prev.filter(r => !(r.type === type && r.id === id)));
   };
 
+  const handleToggleAdmin = async (memberId, currentIsAdmin) => {
+    const res = await fetch(`${API}/admin/users/${memberId}/admin`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!res.ok) return setAdminPromoteStatus(data.error || 'Something went wrong.');
+    setAllMembers(prev => prev.map(m => m.id === memberId ? { ...m, is_admin: data.is_admin } : m));
+    setAdminPromoteStatus(currentIsAdmin ? 'Admin removed.' : 'Admin granted.');
+    setTimeout(() => setAdminPromoteStatus(''), 3000);
+  };
+
 
 
   if (user?.is_admin) {
@@ -637,6 +650,7 @@ export default function AdminSettings({ onNavigate }) {
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-categories').scrollIntoView({ behavior: 'smooth' })}>Categories &amp; Topics</button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-quicklinks').scrollIntoView({ behavior: 'smooth' })}>Quicklinks </button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-ban').scrollIntoView({ behavior: 'smooth' })}>Ban Users</button>
+                          {user?.id === 1 && <button type="button" className="tag-btn" onClick={() => document.getElementById('section-manage-admins').scrollIntoView({ behavior: 'smooth' })}>Manage Admins</button>}
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-theme').scrollIntoView({ behavior: 'smooth' })}>Theme Colors</button>
                         </div>
                         <br></br>
@@ -1187,6 +1201,37 @@ export default function AdminSettings({ onNavigate }) {
                       }
                     </div>
                   </div>
+
+                  {user?.id === 1 && (
+                  <div id="section-manage-admins" className="admin-card">
+                    <div className="admin-content">
+                      <h2><b>Manage Admins</b></h2><br />
+                      <p>Grant or revoke admin privileges for forum members. Admins have access to this settings page and all moderation tools.</p>
+                      <br /><hr /><br />
+                      {allMembers.filter(m => m.id !== user?.id).length === 0 ? (
+                        <p style={{ color: 'var(--text-muted)' }}>No other members found.</p>
+                      ) : (
+                        allMembers
+                          .filter(m => m.id !== user?.id)
+                          .map(m => (
+                            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px', padding: '10px', background: 'var(--bg-hover)', borderRadius: '6px' }}>
+                              <span style={{ flex: 1, fontWeight: 600, color: 'var(--text-primary)' }}>{m.username}</span>
+                              {!!m.is_admin && (
+                                <span style={{ background: 'var(--badge-admin-bg)', color: '#fff', fontSize: '0.7rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>Admin</span>
+                              )}
+                              <button
+                                className="btn-pin-toggle"
+                                onClick={() => handleToggleAdmin(m.id, m.is_admin)}
+                              >
+                                {m.is_admin ? 'Remove Admin' : 'Make Admin'}
+                              </button>
+                            </div>
+                          ))
+                      )}
+                      {adminPromoteStatus && <p className="reply-status">{adminPromoteStatus}</p>}
+                    </div>
+                  </div>
+                  )}
 
                   <div id="section-theme" className="admin-card">
                     <div className="admin-content">
