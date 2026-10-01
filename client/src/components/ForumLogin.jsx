@@ -76,9 +76,12 @@ export default function ForumLogin({ onNavigate }) {
 
                     <button type="submit" className="btn">Log In</button>
 
+                    {status && <p style={{ color: 'white' }}>{status}</p>}
+
                     <div className="divider"></div>
 
                     </form>
+                    
 
                     <p className="loginfooter-text">
                     Don't have an account? <button className="btn-link" onClick={() => onNavigate('register')}>Sign up</button>

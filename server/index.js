@@ -351,7 +351,7 @@ app.post('/api/forgotpwd', resetLimiter, async (req, res) => {
     'INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?, ?, ?)'
   ).run(user.id, tokenHash, Date.now() + RESET_TTL_MS);
 
-  const link = `http://localhost:5173/reset?token=${token}`;
+  const link = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset?token=${token}`;
 
   try {
     await sendResetEmail(user.email, link);
@@ -391,6 +391,7 @@ app.post('/api/login', async (req, res) => {
   const user = db.prepare('SELECT id, username, password_hash, profile_path, is_admin FROM users WHERE username = ?').get(username);
 
   if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+     console.log("Invalid credentials");
      return res.status(401).json({ error: 'Invalid credentials' });
   }
   const ban = db.prepare('SELECT reason FROM bans WHERE user_id = ?').get(user.id);
@@ -888,6 +889,32 @@ app.get('/api/search', authRequired, (req, res) => {
   `).all(like);
 
   res.json({ topics, threads, posts, members });
+});
+
+app.get('/api/admin/smtp', authRequired, ownerRequired, (req, res) => {
+  const keys = ['smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from'];
+  const settings = {};
+  for (const key of keys) {
+    const row = db.prepare('SELECT value FROM site_settings WHERE key = ?').get(key);
+    settings[key] = row?.value || '';
+  }
+  if (settings.smtp_pass) settings.smtp_pass = '••••••••';
+  res.json(settings);
+});
+
+app.post('/api/admin/smtp', authRequired, ownerRequired, (req, res) => {
+  const { smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from } = req.body;
+  const upsert = db.prepare(
+    'INSERT INTO site_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+  );
+  upsert.run('smtp_host', smtp_host || '');
+  upsert.run('smtp_port', smtp_port || '587');
+  upsert.run('smtp_user', smtp_user || '');
+  upsert.run('smtp_from', smtp_from || '');
+  if (smtp_pass && smtp_pass !== '••••••••') {
+    upsert.run('smtp_pass', smtp_pass);
+  }
+  res.json({ message: 'SMTP settings saved.' });
 });
 
 app.use((err, req, res, next) => {

@@ -136,6 +136,11 @@ db.exec(`
   );
 
   CREATE INDEX IF NOT EXISTS idx_reports_target ON reports(target_type, target_id);
+
+  CREATE TABLE IF NOT EXISTS site_settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL DEFAULT ''
+  );
 `);
 
 // Seed default quicklinks if table is empty

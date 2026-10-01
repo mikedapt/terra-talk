@@ -1,34 +1,47 @@
 import nodemailer from 'nodemailer';
+import db from './db.js';
 
-let cached;
+function getDbSetting(key) {
+  return db.prepare('SELECT value FROM site_settings WHERE key = ?').get(key)?.value || '';
+}
 
-export async function getTransporter() {
-  if (cached) return cached;
+async function getTransporter() {
+  const dbHost = getDbSetting('smtp_host');
+  if (dbHost) {
+    return nodemailer.createTransport({
+      host: dbHost,
+      port: Number(getDbSetting('smtp_port') || 587),
+      secure: false,
+      auth: { user: getDbSetting('smtp_user'), pass: getDbSetting('smtp_pass') },
+    });
+  }
 
   if (process.env.SMTP_HOST) {
-    cached = nodemailer.createTransport({
+    return nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT || 587),
       secure: false,
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
     });
-  } else {
-    // dev fallback: Ethereal catches mail and gives you a preview URL
-    const acct = await nodemailer.createTestAccount();
-    console.log('Using Ethereal test account:', acct.user);
-    cached = nodemailer.createTransport({
-      host: 'smtp.ethereal.email',
-      port: 587,
-      auth: { user: acct.user, pass: acct.pass },
-    });
   }
-  return cached;
+
+  // dev fallback: Ethereal catches mail and gives you a preview URL
+  const acct = await nodemailer.createTestAccount();
+  console.log('Using Ethereal test account:', acct.user);
+  return nodemailer.createTransport({
+    host: 'smtp.ethereal.email',
+    port: 587,
+    auth: { user: acct.user, pass: acct.pass },
+  });
 }
 
 export async function sendResetEmail(to, link) {
   const t = await getTransporter();
+  const fromDb = getDbSetting('smtp_from');
+  const from = fromDb || process.env.SMTP_FROM || '"Forum Support" <no-reply@example.com>';
+
   const info = await t.sendMail({
-    from: '"Forum Support" <no-reply@example.com>',
+    from,
     to,
     subject: 'Reset your password',
     text: `Reset your password here (expires in 1 hour): ${link}`,

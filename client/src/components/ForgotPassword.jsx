@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { api } from '../api';
 
 export default function ForgotPassword({ onNavigate }) {
@@ -30,15 +30,8 @@ export default function ForgotPassword({ onNavigate }) {
     }
   };
 
-  useEffect(() => {
-  const token = new URLSearchParams(window.location.search).get('token');
-  if (token) {
-      setResetToken(token);
-      onNavigate('reset');
-    }
-  }, []);
 
-  
+
 
   return (
     <div className="page-content">

@@ -149,6 +149,9 @@ export default function AdminSettings({ onNavigate }) {
   const [reportedContent, setReportedContent] = useState([]);
   const [adminPromoteStatus, setAdminPromoteStatus] = useState('');
 
+  const [smtpForm, setSmtpForm] = useState({ smtp_host: '', smtp_port: '587', smtp_user: '', smtp_pass: '', smtp_from: '' });
+  const [smtpStatus, setSmtpStatus] = useState('');
+
   const capitalize = str => str[0].toUpperCase() + str.slice(1);
 
 
@@ -261,6 +264,14 @@ export default function AdminSettings({ onNavigate }) {
     fetch(`${API}/members`, { headers }).then(r => r.json()).then(data => setAllMembers(Array.isArray(data) ? data.filter(m => m.username !== 'admin') : [])).catch(() => {});
     fetch(`${API}/admin/reports`, { headers }).then(r => r.json()).then(setReportedContent).catch(() => {});
   }, [token]);
+
+  useEffect(() => {
+    if (!token || user?.id !== 1) return;
+    fetch(`${API}/admin/smtp`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(data => setSmtpForm(prev => ({ ...prev, ...data })))
+      .catch(() => {});
+  }, [token, user?.id]);
 
   // Submit Form Values to Server Side
 
@@ -618,6 +629,18 @@ export default function AdminSettings({ onNavigate }) {
     setTimeout(() => setAdminPromoteStatus(''), 3000);
   };
 
+  const handleSmtpSave = async (e) => {
+    e.preventDefault();
+    const res = await fetch(`${API}/admin/smtp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(smtpForm),
+    });
+    const data = await res.json();
+    setSmtpStatus(data.message || data.error || 'Something went wrong.');
+    setTimeout(() => setSmtpStatus(''), 4000);
+  };
+
 
 
   if (user?.is_admin) {
@@ -651,6 +674,7 @@ export default function AdminSettings({ onNavigate }) {
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-quicklinks').scrollIntoView({ behavior: 'smooth' })}>Quicklinks </button>
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-ban').scrollIntoView({ behavior: 'smooth' })}>Ban Users</button>
                           {user?.id === 1 && <button type="button" className="tag-btn" onClick={() => document.getElementById('section-manage-admins').scrollIntoView({ behavior: 'smooth' })}>Manage Admins</button>}
+                          {user?.id === 1 && <button type="button" className="tag-btn" onClick={() => document.getElementById('section-smtp').scrollIntoView({ behavior: 'smooth' })}>Email / SMTP</button>}
                           <button type="button" className="tag-btn" onClick={() => document.getElementById('section-theme').scrollIntoView({ behavior: 'smooth' })}>Theme Colors</button>
                         </div>
                         <br></br>
@@ -1229,6 +1253,45 @@ export default function AdminSettings({ onNavigate }) {
                           ))
                       )}
                       {adminPromoteStatus && <p className="reply-status">{adminPromoteStatus}</p>}
+                    </div>
+                  </div>
+                  )}
+
+                  {user?.id === 1 && (
+                  <div id="section-smtp" className="admin-card">
+                    <div className="admin-content">
+                      <h2><b>Email / SMTP</b></h2><br />
+                      <p>Configure outgoing email so the forgot password feature works for your forum. Settings are stored in the database and override any server environment variables.</p>
+                      <br /><hr /><br />
+                      <form onSubmit={handleSmtpSave}>
+                        <div className="form-group">
+                          <label>SMTP Host</label>
+                          <input type="text" value={smtpForm.smtp_host} placeholder="e.g. smtp.resend.com"
+                            onChange={e => setSmtpForm(p => ({ ...p, smtp_host: e.target.value }))} />
+                        </div>
+                        <div className="form-group">
+                          <label>SMTP Port</label>
+                          <input type="text" value={smtpForm.smtp_port} placeholder="587"
+                            onChange={e => setSmtpForm(p => ({ ...p, smtp_port: e.target.value }))} />
+                        </div>
+                        <div className="form-group">
+                          <label>SMTP Username</label>
+                          <input type="text" value={smtpForm.smtp_user} placeholder="e.g. resend or your email"
+                            onChange={e => setSmtpForm(p => ({ ...p, smtp_user: e.target.value }))} />
+                        </div>
+                        <div className="form-group">
+                          <label>SMTP Password</label>
+                          <input type="password" value={smtpForm.smtp_pass} placeholder="Password or API key"
+                            onChange={e => setSmtpForm(p => ({ ...p, smtp_pass: e.target.value }))} />
+                        </div>
+                        <div className="form-group">
+                          <label>From Address</label>
+                          <input type="text" value={smtpForm.smtp_from} placeholder='e.g. "My Forum" <no-reply@yourdomain.com>'
+                            onChange={e => setSmtpForm(p => ({ ...p, smtp_from: e.target.value }))} />
+                        </div>
+                        {smtpStatus && <p className="reply-status">{smtpStatus}</p>}
+                        <button type="submit" className="btn">Save SMTP Settings</button>
+                      </form>
                     </div>
                   </div>
                   )}

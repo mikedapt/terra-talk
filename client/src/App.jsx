@@ -48,6 +48,15 @@ export default function App() {
     return () => window.removeEventListener('siteSettingsChanged', applyTabSettings);
   }, [])
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      setView({ page: 'reset', token });
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [])
+
   function navigate(page, data = {}) {
     setView({ page, ...data })
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -76,7 +85,7 @@ export default function App() {
       {!banned && view.page === 'adminsettings' && <AdminSettings onNavigate={navigate} />}
       {!banned && view.page === 'profilesettings' && <ProfileSettings onNavigate={navigate} />}
       {!banned && view.page === 'forgotpwd' && <ForgotPassword onNavigate={navigate} />}
-      {!banned && view.page === 'reset' && <PasswordReset onNavigate={navigate} />}
+      {!banned && view.page === 'reset' && <PasswordReset token={view.token} onNavigate={navigate} />}
       {!banned && view.page === 'terms' && <TermsOfService onNavigate={navigate} />}
       {!banned && view.page === 'topic' && <CategoryView topic={view.topic} onNavigate={navigate} />}
       {!banned && view.page === 'newthread' && <CreateNewThread topic={view.topic} onNavigate={navigate} />}
