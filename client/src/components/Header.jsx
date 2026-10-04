@@ -1,8 +1,7 @@
 //import ProfileMenu from './ProfileMenu'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../AuthContext';
-//import { Link } from 'react-router-dom';
-//import DefaultProfile from "../assets/profiles/default_admin_profile_icon.png"; 
+
 
 
 

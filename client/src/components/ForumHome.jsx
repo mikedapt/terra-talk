@@ -1,4 +1,3 @@
-import { forumSections, forumStats } from '../data/mockData'
 import CategoryRow from './CategoryRow'
 import { useState, useEffect } from 'react'
 import { api } from '../api';
