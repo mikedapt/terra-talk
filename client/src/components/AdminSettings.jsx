@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
 
-const API = 'http://localhost:3001/api';
+const API = '/api';
 
 const COLOR_VARS = {
   'Backgrounds': [
@@ -219,7 +219,7 @@ export default function AdminSettings({ onNavigate }) {
 
     //(async () => {
       //try {
-        //const res = await fetch("http://localhost:3001/api/categories");
+        //const res = await fetch("/api/categories");
         //const data = await res.json();
         //if (!cancelled) setCategories(Array.isArray(data) ? data : []);
       //} catch {
@@ -249,7 +249,7 @@ export default function AdminSettings({ onNavigate }) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/quicklinks');
+        const res = await fetch('/api/quicklinks');
         const data = await res.json();
         if (!cancelled) setQuicklinks(Array.isArray(data) ? data : []);
       } catch {}
@@ -287,7 +287,7 @@ export default function AdminSettings({ onNavigate }) {
     const isCategory = e.target.id === 'addcat-form';
 
     try {
-      const res = await fetch(`http://localhost:3001/api/${isCategory ? 'categories' : 'topics'}`, {
+      const res = await fetch(`/api/${isCategory ? 'categories' : 'topics'}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -354,7 +354,7 @@ export default function AdminSettings({ onNavigate }) {
   const handleAddQuicklink = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:3001/api/quicklinks', {
+      const res = await fetch('/api/quicklinks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ title: qlform.qltitle, icon: qlform.qlicon, link: qlform.qllink }),
@@ -372,7 +372,7 @@ export default function AdminSettings({ onNavigate }) {
 
   const handleRestoreDefaultQuicklinks = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/quicklinks/reset', {
+      const res = await fetch('/api/quicklinks/reset', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -388,7 +388,7 @@ export default function AdminSettings({ onNavigate }) {
 
   const handleDeleteQuicklink = async (id) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/quicklinks/${id}`, {
+      const res = await fetch(`/api/quicklinks/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -549,7 +549,7 @@ export default function AdminSettings({ onNavigate }) {
       const form = new FormData();
       form.append('logo', file);
 
-      const res = await fetch('http://localhost:3001/api/admin/logo', {
+      const res = await fetch('/api/admin/logo', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: form,
@@ -558,7 +558,7 @@ export default function AdminSettings({ onNavigate }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed. Try again.');
 
-      const logoUrl = `http://localhost:3001/logos/${data.logo_path}`;
+      const logoUrl = `/logos/${data.logo_path}`;
       localStorage.setItem('siteLogoUrl', logoUrl);
       window.dispatchEvent(new Event('siteSettingsChanged'));
       setCurrentLogoUrl(logoUrl);

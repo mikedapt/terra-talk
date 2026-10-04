@@ -93,6 +93,18 @@ export default function App() {
       {!banned && view.page === 'search' && <SearchPage onNavigate={navigate} />}
       {!banned && view.page === 'memberprofile' && <MemberProfile memberId={view.memberId} onNavigate={navigate} />}
 
+      {!banned && !['home','login','register','memberpage','adminsettings','profilesettings','forgotpwd','reset','terms','topic','newthread','thread','search','memberprofile'].includes(view.page) && (
+        <div className="page-content">
+          <div className="auth-container">
+            <div className="policy-card" style={{ textAlign: 'center' }}>
+              <h2 className="general-heading">404 — Page Not Found</h2>
+              <hr /><br />
+              <button className="btn-submit-reply" onClick={() => navigate('home')}>Go Home</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer onNavigate={navigate} />
     </div>
   )

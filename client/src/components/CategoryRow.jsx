@@ -7,7 +7,7 @@ export default function CategoryRow({ topic, onClick }) {
   const [latestpost, setLastPost] = useState({ threadtitle: "", author: "", time: ""});
 
   useEffect(() => {
-    fetch(`http://localhost:3001/api/threadpostquery?topic_id=${topic.id}`)
+    fetch(`/api/threadpostquery?topic_id=${topic.id}`)
       .then(r => r.json())
       .then(data => setCounts(data));
   }, [topic.id]);
@@ -15,7 +15,7 @@ export default function CategoryRow({ topic, onClick }) {
 
 
   useEffect(() => {
-    fetch(`http://localhost:3001/api/latestpostquery?topic_id=${topic.id}`)
+    fetch(`/api/latestpostquery?topic_id=${topic.id}`)
       .then(r => r.json())
       .then(data => setLastPost(data));
   }, [topic.id]);

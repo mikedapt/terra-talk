@@ -23,7 +23,7 @@ export default function ForumHome({ onNavigate }) {
 
     (async () => {
       try {
-        const res = await fetch("http://localhost:3001/api/categories");
+        const res = await fetch("/api/categories");
         const data = await res.json();
         if (!cancelled) setCategories(Array.isArray(data) ? data : []);
       } catch {
@@ -40,7 +40,7 @@ export default function ForumHome({ onNavigate }) {
 
     (async () => {
       try {
-        const res = await fetch("http://localhost:3001/api/topics");
+        const res = await fetch("/api/topics");
         const data = await res.json();
         if (!cancelled) setTopics(Array.isArray(data) ? data : []);
       } catch {

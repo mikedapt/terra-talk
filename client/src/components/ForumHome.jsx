@@ -3,7 +3,7 @@ import CategoryRow from './CategoryRow'
 import { useState, useEffect } from 'react'
 import { api } from '../api';
 
-const API = 'http://localhost:3001/api';
+const API = '/api';
 
 export default function ForumHome({ onNavigate }) {
 

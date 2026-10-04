@@ -19,7 +19,7 @@ export default function CategoryView({ topic, onNavigate }) {
 
     (async () => {
       try {
-        const res = await fetch("http://localhost:3001/api/threads");
+        const res = await fetch("/api/threads");
         const data = await res.json();
         if (!cancelled) setThreads(Array.isArray(data) ? data : []);
       } catch {
@@ -37,7 +37,7 @@ export default function CategoryView({ topic, onNavigate }) {
       prev.map(t => t.id === threadId ? { ...t, is_pinned: currentIsPinned ? 0 : 1 } : t)
     );
     try {
-      const res = await fetch(`http://localhost:3001/api/threads/${threadId}/pin`, {
+      const res = await fetch(`/api/threads/${threadId}/pin`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -137,18 +137,18 @@ function ThreadRow({ thread, pinned, user, onTogglePin, onClick }) {
   const [recentpost, setRecentPost] = useState({ author: '', time: '' });
 
   useEffect(() => {
-    fetch(`http://localhost:3001/api/postquery?thread_id=${thread.id}`)
+    fetch(`/api/postquery?thread_id=${thread.id}`)
       .then(r => r.json())
       .then(data => setPostCounts(data));
 
-    fetch(`http://localhost:3001/api/viewquery?thread_id=${thread.id}`)
+    fetch(`/api/viewquery?thread_id=${thread.id}`)
       .then(r => r.json())
       .then(data => setViewCount(data.viewcount))
       .catch(() => {});
   }, [thread.id]);
 
   useEffect(() => {
-    fetch(`http://localhost:3001/api/recentpostquery?thread_id=${thread.id}`)
+    fetch(`/api/recentpostquery?thread_id=${thread.id}`)
       .then(r => r.json())
       .then(data => setRecentPost(data));
   }, [thread.id]);
@@ -156,7 +156,7 @@ function ThreadRow({ thread, pinned, user, onTogglePin, onClick }) {
   return (
     <div className={`thread-row ${pinned ? 'thread-pinned' : ''}`} onClick={onClick} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onClick()}>
       <div className="thread-col-main">
-        <div className="thread-avatar"><img src={`http://localhost:3001/profiles/${thread.profile_path}`}></img></div>
+        <div className="thread-avatar"><img src={`/profiles/${thread.profile_path}`}></img></div>
         <div className="thread-info">
           <div className="thread-title-row">
             {pinned && <span className="pin-badge">📌 Pinned</span>}

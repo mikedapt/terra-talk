@@ -18,7 +18,7 @@ export default function CreateNewThread({ topic, onNavigate }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:3001/api/newthread", {
+      const res = await fetch("/api/newthread", {
         method: "POST",
         headers: { "Content-Type": "application/json",
                    Authorization: `Bearer ${token}`,

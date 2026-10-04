@@ -31,7 +31,7 @@ export default function ProfileSettings({ onNavigate }) {
       const form = new FormData();
       form.append('avatar', file);
 
-      const res = await fetch('http://localhost:3001/api/me/avatar', {
+      const res = await fetch('/api/me/avatar', {
         method: 'POST',
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         body: form,
@@ -62,7 +62,7 @@ export default function ProfileSettings({ onNavigate }) {
     setUsernameLoading(true);
     setUsernameStatus(null);
     try {
-      const res = await fetch('http://localhost:3001/api/me/username', {
+      const res = await fetch('/api/me/username', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ export default function ProfileSettings({ onNavigate }) {
     setEmailLoading(true);
     setEmailStatus(null);
     try {
-      const res = await fetch('http://localhost:3001/api/me/email', {
+      const res = await fetch('/api/me/email', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -111,7 +111,7 @@ export default function ProfileSettings({ onNavigate }) {
   }
 
   const avatarSrc = preview
-    ?? (user?.profile_path ? `http://localhost:3001/profiles/${user.profile_path}` : null);
+    ?? (user?.profile_path ? `/profiles/${user.profile_path}` : null);
 
   return (
     <div className="page-content">

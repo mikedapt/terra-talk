@@ -19,7 +19,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
 
 
   const loadPosts = async () => {
-    const res = await fetch("http://localhost:3001/api/posts");
+    const res = await fetch("/api/posts");
     if (!res.ok) throw new Error(`GET /api/posts failed (${res.status})`);
     const data = await res.json();
     setPosts(Array.isArray(data) ? data : []);
@@ -28,8 +28,8 @@ export default function ThreadView({ thread, topic, onNavigate }) {
   const loadLikes = async () => {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     const [tl, pl] = await Promise.all([
-      fetch(`http://localhost:3001/api/thread-likes?thread_id=${thread.id}`, { headers }).then(r => r.json()),
-      fetch(`http://localhost:3001/api/post-likes?thread_id=${thread.id}`, { headers }).then(r => r.json()),
+      fetch(`/api/thread-likes?thread_id=${thread.id}`, { headers }).then(r => r.json()),
+      fetch(`/api/post-likes?thread_id=${thread.id}`, { headers }).then(r => r.json()),
     ]);
     setThreadLike(tl);
     setPostLikes(pl);
@@ -37,7 +37,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
 
   const loadReports = async () => {
     if (!token) return;
-    const data = await fetch(`http://localhost:3001/api/reports?thread_id=${thread.id}`, {
+    const data = await fetch(`/api/reports?thread_id=${thread.id}`, {
       headers: { Authorization: `Bearer ${token}` },
     }).then(r => r.json());
     setThreadReport(data.thread);
@@ -53,7 +53,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
       .finally(() => setLoading(false));
 
     if (token) {
-      fetch("http://localhost:3001/api/thread-view", {
+      fetch("/api/thread-view", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ thread_id: thread.id }),
@@ -61,7 +61,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
       }).catch(() => {});
     }
 
-    fetch(`http://localhost:3001/api/viewquery?thread_id=${thread.id}`, { signal })
+    fetch(`/api/viewquery?thread_id=${thread.id}`, { signal })
       .then(r => r.json())
       .then(data => setViewCount(data.viewcount))
       .catch(() => {});
@@ -78,7 +78,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
     const prev = threadLike;
     setThreadLike(tl => ({ count: tl.hasLiked ? tl.count - 1 : tl.count + 1, hasLiked: !tl.hasLiked }));
     try {
-      const res = await fetch('http://localhost:3001/api/thread-likes', {
+      const res = await fetch('/api/thread-likes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ thread_id: thread.id }),
@@ -95,7 +95,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
     const current = postLikes[post_id] || { count: 0, hasLiked: false };
     setPostLikes(pl => ({ ...pl, [post_id]: { count: current.hasLiked ? current.count - 1 : current.count + 1, hasLiked: !current.hasLiked } }));
     try {
-      const res = await fetch('http://localhost:3001/api/post-likes', {
+      const res = await fetch('/api/post-likes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ post_id }),
@@ -111,7 +111,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
     const prev = threadReport;
     setThreadReport(r => ({ count: r.hasReported ? r.count - 1 : r.count + 1, hasReported: !r.hasReported }));
     try {
-      const res = await fetch('http://localhost:3001/api/reports', {
+      const res = await fetch('/api/reports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ target_type: 'thread', target_id: thread.id }),
@@ -128,7 +128,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
     const current = postReports[post_id] || { count: 0, hasReported: false };
     setPostReports(pr => ({ ...pr, [post_id]: { count: current.hasReported ? current.count - 1 : current.count + 1, hasReported: !current.hasReported } }));
     try {
-      const res = await fetch('http://localhost:3001/api/reports', {
+      const res = await fetch('/api/reports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ target_type: 'post', target_id: post_id }),
@@ -154,7 +154,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:3001/api/newpost", {
+      const res = await fetch("/api/newpost", {
         method: "POST",
         headers: { "Content-Type": "application/json",
                    Authorization: `Bearer ${token}`,
@@ -212,7 +212,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
       <div className="posts-list">
           <div key={thread.id} className='post-card post-op'>
             <div className="post-sidebar">
-              <div className="post-avatar"><img src={`http://localhost:3001/profiles/${thread.profile_path}`}></img></div>
+              <div className="post-avatar"><img src={`/profiles/${thread.profile_path}`}></img></div>
               <div className="post-author-name">{thread.username}</div>
               <div className="post-author-role">
                 {thread.is_admin === 1 ? <span className="role-badge admin">Admin</span>
@@ -257,7 +257,7 @@ export default function ThreadView({ thread, topic, onNavigate }) {
         {threadPosts.map((post, idx) => (
           <div key={post.id} className='post-card'>
             <div className="post-sidebar">
-              <div className="post-avatar"><img src={`http://localhost:3001/profiles/${post.profile_path}`}></img></div>
+              <div className="post-avatar"><img src={`/profiles/${post.profile_path}`}></img></div>
               <div className="post-author-name">{post.username}</div>
               <div className="post-author-role">
                 {post.is_admin === 1 ? <span className="role-badge admin">Admin</span>

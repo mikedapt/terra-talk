@@ -10,7 +10,7 @@ export default function MemberPage({ onNavigate }) {
   useEffect(() => {
     if (!user) return;
     const controller = new AbortController();
-    fetch('http://localhost:3001/api/members', {
+    fetch('/api/members', {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       signal: controller.signal,
     })
@@ -65,7 +65,7 @@ export default function MemberPage({ onNavigate }) {
               <div className="member-avatar-wrap">
                 <div className="thread-avatar">
                   {member.profile_path
-                    ? <img src={`http://localhost:3001/profiles/${member.profile_path}`} alt={`${member.username}'s avatar`} />
+                    ? <img src={`/profiles/${member.profile_path}`} alt={`${member.username}'s avatar`} />
                     : member.username.charAt(0).toUpperCase()
                   }
                 </div>

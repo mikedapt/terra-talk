@@ -23,7 +23,7 @@ export default function SearchPage({ onNavigate }) {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:3001/api/search?q=${encodeURIComponent(q)}`, {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -160,7 +160,7 @@ export default function SearchPage({ onNavigate }) {
                     <div className="member-avatar-wrap">
                       <div className="thread-avatar">
                         {m.profile_path
-                          ? <img src={`http://localhost:3001/profiles/${m.profile_path}`} alt={`${m.username}'s avatar`} />
+                          ? <img src={`/profiles/${m.profile_path}`} alt={`${m.username}'s avatar`} />
                           : m.username.charAt(0).toUpperCase()
                         }
                       </div>

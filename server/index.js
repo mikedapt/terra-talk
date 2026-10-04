@@ -52,10 +52,13 @@ const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
 
 
 
-// Create a path for uploaded content to the server
+// Serve uploaded files (avatars, logos)
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+// Serve built frontend in production
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }));
 //app.use(cors({ origin: 'http://localhost:5173'}));
 app.use(express.json());
 
@@ -261,7 +264,7 @@ app.patch('/api/me/username', authRequired, (req, res) => {
   const taken = db.prepare('SELECT id FROM users WHERE username = ? AND id != ?').get(username, req.user.id);
   if (taken) return res.status(400).json({ error: 'Username is already taken.' });
   db.prepare('UPDATE users SET username = ? WHERE id = ?').run(username, req.user.id);
-  const token = jwt.sign({ id: req.user.id, username, is_admin: req.user.is_admin }, JWT_SECRET);
+  const token = jwt.sign({ id: req.user.id, username, is_admin: req.user.is_admin }, JWT_SECRET, { expiresIn: '30d' });
   res.json({ token, username });
 });
 
@@ -302,22 +305,21 @@ app.post('/api/admin/logo', authRequired, adminRequired, logoUpload.single('logo
 
 app.post('/api/register', async (req, res) => {
   const { username, email, password, confirm, agree } = req.body;
-  if (password == confirm) {
-     if (agree == true) {
+  if (password === confirm) {
+     if (agree === true) {
          try {
               const proicon = "default_profile_icon.png";
               const hash = await bcrypt.hash(password, 10);
               const info = db.prepare(
               'INSERT INTO users (username, email, profile_path, password_hash) VALUES (?, ?, ?, ?)'
               ).run(username, email, proicon, hash);
-              const token = jwt.sign({ id: info.lastInsertRowid, username, is_admin: 0 }, JWT_SECRET);
+              const token = jwt.sign({ id: info.lastInsertRowid, username, is_admin: 0 }, JWT_SECRET, { expiresIn: '30d' });
               res.json({ token, user: { id: info.lastInsertRowid, username, profile_path: proicon, is_admin: 0 } });
               //res.status(400).json({ error: agree });
               console.log("register success!");
         } catch (e) {
           //res.status(400).json({ error: 'Username or email already taken' });
-          res.status(400).json({ error: e });
-          console.log(e);
+          res.status(400).json({ error: e.message || 'Registration failed' });
         }
      } else {
        res.status(400).json({ error: 'acknowledgement checkbox unchecked' });
@@ -386,7 +388,7 @@ app.post('/api/resetpwd', resetLimiter, async (req, res) => {
   res.json({ message: 'Password updated. You can now log in.' });
 });
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', loginLimiter, async (req, res) => {
   const { username, password } = req.body;
   const user = db.prepare('SELECT id, username, password_hash, profile_path, is_admin FROM users WHERE username = ?').get(username);
 
@@ -396,7 +398,7 @@ app.post('/api/login', async (req, res) => {
   }
   const ban = db.prepare('SELECT reason FROM bans WHERE user_id = ?').get(user.id);
   if (ban) return res.status(403).json({ error: 'banned', reason: ban.reason });
-  const token = jwt.sign({ id: user.id, username: user.username, is_admin: user.is_admin }, JWT_SECRET);
+  const token = jwt.sign({ id: user.id, username: user.username, is_admin: user.is_admin }, JWT_SECRET, { expiresIn: '30d' });
   res.json({ token, user: { id: user.id, username: user.username, profile_path: user.profile_path, is_admin: user.is_admin } });
   console.log("login success!");
 });
@@ -930,4 +932,10 @@ app.use((err, req, res, next) => {
 });
 
 
-app.listen(3001, () => console.log('API on http://localhost:3001'));
+// SPA fallback — must come after all /api routes
+app.get('/{*splat}', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -10,7 +10,7 @@ import { useAuth } from '../AuthContext';
 //<Link to={`/users/${username}`}>Profile</Link>
 
 //{user?.profile_path && (
-//           <img className="profile-icon" src={`http://localhost:3001/profiles/${user.profile_path}`}></img>
+//           <img className="profile-icon" src={`/profiles/${user.profile_path}`}></img>
 //)}
 
 export default function Header({ darkMode, toggleDark, onNavigate }) {
@@ -48,7 +48,7 @@ export default function Header({ darkMode, toggleDark, onNavigate }) {
     return (
       <div className="profile-menu">
         {user?.profile_path && (
-           <img className="profile-icon" src={`http://localhost:3001/profiles/${user.profile_path}`}></img>
+           <img className="profile-icon" src={`/profiles/${user.profile_path}`}></img>
         )}
         <button onClick={() => setOpen(o => !o)}>{username} ▾</button>
         {open && (
