@@ -98,7 +98,9 @@ cd server && node index.js
 4. Visit http://localhost:3001 (or your configured PORT)
 <br></br>
 
-
+<h3> Live Site Demo </h3>
+https://terra-talk-production.up.railway.app/
+<br></br>
 
 It is my hope that you may get alot of use out of this forum and should you have suggestions, please reach out to my github at https://github.com/mikedapt
 
