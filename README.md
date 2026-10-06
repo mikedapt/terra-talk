@@ -8,6 +8,7 @@ Terra Talk is an open source forum application created for server owners (minecr
 </div>
 
 <img width="49%" height="49%" alt="Image" src="https://github.com/user-attachments/assets/97630543-ac30-4e0d-92ce-262ffc5e9b5c" />
+**Copyright mark was removed in recent update, screenshots are of an older version**
 
 <h2> Forum Settings </h2>
 Owners can manage the forum settings to customize the forum site how ever they want! From the title to the theme colors, there are no limits to any specific game or features the forum could be for!
