@@ -277,6 +277,22 @@ app.patch('/api/me/email', authRequired, (req, res) => {
   res.json({ email });
 });
 
+app.patch('/api/me/password', authRequired, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword)
+    return res.status(400).json({ error: 'All fields are required.' });
+  if (newPassword.length < 8)
+    return res.status(400).json({ error: 'New password must be at least 8 characters.' });
+
+  const row = db.prepare('SELECT password_hash FROM users WHERE id = ?').get(req.user.id);
+  const match = await bcrypt.compare(currentPassword, row.password_hash);
+  if (!match) return res.status(400).json({ error: 'Current password is incorrect.' });
+
+  const hash = await bcrypt.hash(newPassword, 10);
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, req.user.id);
+  res.json({ message: 'Password updated successfully.' });
+});
+
 app.post('/api/me/avatar', authRequired, avatarUpload.single('avatar'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No image was uploaded.' });
  

@@ -18,6 +18,12 @@ export default function ProfileSettings({ onNavigate }) {
   const [emailStatus, setEmailStatus] = useState(null);
   const [emailLoading, setEmailLoading] = useState(false);
 
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordStatus, setPasswordStatus] = useState(null);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
   async function handleFileChange(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -80,6 +86,39 @@ export default function ProfileSettings({ onNavigate }) {
       setUsernameStatus({ type: 'error', text: err.message });
     } finally {
       setUsernameLoading(false);
+    }
+  }
+
+  async function handlePasswordChange() {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordStatus({ type: 'error', text: 'Please fill in all password fields.' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordStatus({ type: 'error', text: 'New passwords do not match.' });
+      return;
+    }
+    setPasswordLoading(true);
+    setPasswordStatus(null);
+    try {
+      const res = await fetch('/api/me/password', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update password.');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordStatus({ type: 'ok', text: 'Password updated successfully.' });
+    } catch (err) {
+      setPasswordStatus({ type: 'error', text: err.message });
+    } finally {
+      setPasswordLoading(false);
     }
   }
 
@@ -211,6 +250,52 @@ export default function ProfileSettings({ onNavigate }) {
           {emailStatus && (
             <p style={{ color: emailStatus.type === 'error' ? '#c0392b' : '#2e7d32', marginTop: '8px' }}>
               {emailStatus.text}
+            </p>
+          )}
+
+          <br /><br />
+          <hr />
+          <br />
+
+          <h2>Change Password</h2>
+          <br />
+          <div className="form-group">
+            <label>Current Password</label>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={e => setCurrentPassword(e.target.value)}
+              placeholder="Enter current password"
+            />
+          </div>
+          <div className="form-group">
+            <label>New Password</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              placeholder="Enter new password"
+            />
+          </div>
+          <div className="form-group">
+            <label>Confirm New Password</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              placeholder="Confirm new password"
+            />
+          </div>
+          <button
+            className="btn-submit-reply"
+            onClick={handlePasswordChange}
+            disabled={passwordLoading}
+          >
+            {passwordLoading ? 'Saving…' : 'Update Password'}
+          </button>
+          {passwordStatus && (
+            <p style={{ color: passwordStatus.type === 'error' ? '#c0392b' : '#2e7d32', marginTop: '8px' }}>
+              {passwordStatus.text}
             </p>
           )}
 
