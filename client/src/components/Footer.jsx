@@ -30,7 +30,6 @@ export default function Footer({ onNavigate }) {
       <div className="footer-inner">
         <div className="footer-left">
           <span className="footer-brand">{siteTitle}</span>
-          <span className="footer-copy">© 2026 All rights reserved.</span>
         </div>
         <div className="footer-links">
           {footerLinks.map((link, i) => (
